@@ -5,9 +5,10 @@ interface Props {
   avalanche: PayoffResult
   snowball: PayoffResult
   strategy: Strategy
+  currency: string
 }
 
-export default function PayoffChart({ avalanche, snowball, strategy }: Props) {
+export default function PayoffChart({ avalanche, snowball, strategy, currency }: Props) {
   const maxMonth = Math.max(avalanche.history.at(-1)?.month ?? 0, snowball.history.at(-1)?.month ?? 0)
 
   const data = Array.from({ length: maxMonth + 1 }, (_, month) => {
@@ -54,7 +55,7 @@ export default function PayoffChart({ avalanche, snowball, strategy }: Props) {
               tickLine={false}
             />
             <YAxis
-              tickFormatter={(v) => formatCurrency(v)}
+              tickFormatter={(v) => formatCurrency(v, currency)}
               stroke="currentColor"
               className="text-xs text-slate-400"
               tickLine={false}
@@ -62,7 +63,7 @@ export default function PayoffChart({ avalanche, snowball, strategy }: Props) {
             />
             <Tooltip
               formatter={(value, name) => [
-                formatCurrency(Number(value) || 0),
+                formatCurrency(Number(value) || 0, currency),
                 name === 'avalanche' ? 'Avalanche' : 'Snowball',
               ]}
               labelFormatter={(m) => `Month ${m}`}

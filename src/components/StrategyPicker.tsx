@@ -6,9 +6,10 @@ interface Props {
   onSelect: (s: Strategy) => void
   avalanche: PayoffResult
   snowball: PayoffResult
+  currency: string
 }
 
-export default function StrategyPicker({ strategy, onSelect, avalanche, snowball }: Props) {
+export default function StrategyPicker({ strategy, onSelect, avalanche, snowball, currency }: Props) {
   const cheaper: Strategy = avalanche.totalInterestPaid <= snowball.totalInterestPaid ? 'avalanche' : 'snowball'
   const savings = Math.abs(avalanche.totalInterestPaid - snowball.totalInterestPaid)
 
@@ -51,7 +52,7 @@ export default function StrategyPicker({ strategy, onSelect, avalanche, snowball
             >
               {key === cheaper && (
                 <span className="absolute -top-2.5 right-3 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                  Saves {formatCurrency(savings)}
+                  Saves {formatCurrency(savings, currency)}
                 </span>
               )}
               <div className="flex items-center gap-2">
@@ -70,7 +71,7 @@ export default function StrategyPicker({ strategy, onSelect, avalanche, snowball
                   <div>
                     <dt className="text-[11px] uppercase tracking-wide text-slate-400">Interest paid</dt>
                     <dd className="font-medium text-slate-800 dark:text-slate-100">
-                      {formatCurrency(result.totalInterestPaid)}
+                      {formatCurrency(result.totalInterestPaid, currency)}
                     </dd>
                   </div>
                 </dl>

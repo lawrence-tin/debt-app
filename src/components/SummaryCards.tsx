@@ -5,9 +5,10 @@ import { formatCurrency, formatMonthsAsYears, type PayoffResult } from '../lib/p
 interface Props {
   result: PayoffResult
   baseline: PayoffResult
+  currency: string
 }
 
-export default function SummaryCards({ result, baseline }: Props) {
+export default function SummaryCards({ result, baseline, currency }: Props) {
   const interestSaved = Math.max(0, baseline.totalInterestPaid - result.totalInterestPaid)
   const monthsSaved = Math.max(0, baseline.months - result.months)
 
@@ -26,13 +27,13 @@ export default function SummaryCards({ result, baseline }: Props) {
       />
       <StatCard
         label="Total interest paid"
-        value={result.feasible ? formatCurrency(result.totalInterestPaid) : '—'}
+        value={result.feasible ? formatCurrency(result.totalInterestPaid, currency) : '—'}
         icon={<Receipt size={16} />}
         accent="rose"
       />
       <StatCard
         label="Interest saved by paying extra"
-        value={result.feasible ? formatCurrency(interestSaved) : '—'}
+        value={result.feasible ? formatCurrency(interestSaved, currency) : '—'}
         hint="vs. paying only the minimums"
         icon={<PiggyBank size={16} />}
         accent="sky"

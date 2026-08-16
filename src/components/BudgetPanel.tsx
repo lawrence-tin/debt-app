@@ -1,11 +1,13 @@
 import { Wallet } from 'lucide-react'
 import { formatCurrency } from '../lib/payoff'
+import { getCurrencySymbol } from '../lib/currencies'
 
 interface Props {
   monthlyIncome: number
   fixedExpenses: number
   extraPayment: number
   totalMinPayment: number
+  currency: string
   onChange: (patch: Partial<{ monthlyIncome: number; fixedExpenses: number; extraPayment: number }>) => void
 }
 
@@ -14,11 +16,13 @@ export default function BudgetPanel({
   fixedExpenses,
   extraPayment,
   totalMinPayment,
+  currency,
   onChange,
 }: Props) {
   const totalDebtBudget = totalMinPayment + extraPayment
   const leftover = monthlyIncome - fixedExpenses - totalDebtBudget
   const sliderMax = Math.max(500, Math.round((monthlyIncome - fixedExpenses - totalMinPayment) / 10) * 10 || 500)
+  const symbol = getCurrencySymbol(currency)
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -33,7 +37,7 @@ export default function BudgetPanel({
         <label className="col-span-1 text-sm">
           <span className="mb-1 block font-medium text-slate-600 dark:text-slate-300">Monthly income</span>
           <div className="flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800">
-            <span className="mr-1 text-slate-400">$</span>
+            <span className="mr-1 text-slate-400">{symbol}</span>
             <input
               type="number"
               min={0}
@@ -48,7 +52,7 @@ export default function BudgetPanel({
         <label className="col-span-1 text-sm">
           <span className="mb-1 block font-medium text-slate-600 dark:text-slate-300">Other monthly expenses</span>
           <div className="flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800">
-            <span className="mr-1 text-slate-400">$</span>
+            <span className="mr-1 text-slate-400">{symbol}</span>
             <input
               type="number"
               min={0}
@@ -65,7 +69,7 @@ export default function BudgetPanel({
         <div className="mb-1 flex items-baseline justify-between">
           <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Extra toward debt each month</span>
           <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-            {formatCurrency(extraPayment)}
+            {formatCurrency(extraPayment, currency)}
           </span>
         </div>
         <input
@@ -83,16 +87,16 @@ export default function BudgetPanel({
       <dl className="mt-5 space-y-2 rounded-xl bg-slate-50 p-4 text-sm dark:bg-slate-800/60">
         <div className="flex justify-between">
           <dt className="text-slate-500 dark:text-slate-400">Required minimums</dt>
-          <dd className="font-medium text-slate-800 dark:text-slate-100">{formatCurrency(totalMinPayment)}</dd>
+          <dd className="font-medium text-slate-800 dark:text-slate-100">{formatCurrency(totalMinPayment, currency)}</dd>
         </div>
         <div className="flex justify-between">
           <dt className="text-slate-500 dark:text-slate-400">Total monthly debt budget</dt>
-          <dd className="font-semibold text-slate-900 dark:text-white">{formatCurrency(totalDebtBudget)}</dd>
+          <dd className="font-semibold text-slate-900 dark:text-white">{formatCurrency(totalDebtBudget, currency)}</dd>
         </div>
         <div className="flex justify-between border-t border-slate-200 pt-2 dark:border-slate-700">
           <dt className="text-slate-500 dark:text-slate-400">Left over</dt>
           <dd className={`font-semibold ${leftover < 0 ? 'text-rose-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
-            {formatCurrency(leftover)}
+            {formatCurrency(leftover, currency)}
           </dd>
         </div>
       </dl>

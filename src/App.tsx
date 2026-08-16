@@ -5,12 +5,14 @@ import DebtsPanel from './components/DebtsPanel'
 import StrategyPicker from './components/StrategyPicker'
 import SummaryCards from './components/SummaryCards'
 import Milestones from './components/Milestones'
+import CurrencySelector from './components/CurrencySelector'
 
 const PayoffChart = lazy(() => import('./components/PayoffChart'))
 import ThemeToggle from './components/ThemeToggle'
 import Confetti from './components/Confetti'
 import { simulatePayoff, totalBalance, totalMinPayment, type Debt, type Strategy } from './lib/payoff'
 import { loadState, saveState, SAMPLE_DEBTS } from './lib/storage'
+import { guessCurrencyFromLocale } from './lib/currencies'
 
 const DEFAULTS = {
   debts: [] as Debt[],
@@ -36,6 +38,7 @@ export default function App() {
   const [extraPayment, setExtraPayment] = useState(saved?.extraPayment ?? DEFAULTS.extraPayment)
   const [strategy, setStrategy] = useState<Strategy>(saved?.strategy ?? DEFAULTS.strategy)
   const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme())
+  const [currency, setCurrency] = useState<string>(saved?.currency ?? guessCurrencyFromLocale())
   const [confettiTrigger, setConfettiTrigger] = useState(0)
 
   useEffect(() => {
@@ -43,8 +46,8 @@ export default function App() {
   }, [theme])
 
   useEffect(() => {
-    saveState({ debts, monthlyIncome, fixedExpenses, extraPayment, strategy, theme })
-  }, [debts, monthlyIncome, fixedExpenses, extraPayment, strategy, theme])
+    saveState({ debts, monthlyIncome, fixedExpenses, extraPayment, strategy, theme, currency })
+  }, [debts, monthlyIncome, fixedExpenses, extraPayment, strategy, theme, currency])
 
   const minPayment = totalMinPayment(debts)
   const originalTotal = totalBalance(debts)
@@ -77,6 +80,7 @@ export default function App() {
             <span className="text-lg font-semibold tracking-tight">ClearPath</span>
           </div>
           <div className="flex items-center gap-2">
+            <CurrencySelector value={currency} onChange={setCurrency} compact />
             <button
               onClick={resetAll}
               className="hidden items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-700 sm:inline-flex dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
@@ -104,20 +108,32 @@ export default function App() {
               fixedExpenses={fixedExpenses}
               extraPayment={extraPayment}
               totalMinPayment={minPayment}
+              currency={currency}
               onChange={(patch) => {
                 if (patch.monthlyIncome !== undefined) setMonthlyIncome(patch.monthlyIncome)
                 if (patch.fixedExpenses !== undefined) setFixedExpenses(patch.fixedExpenses)
                 if (patch.extraPayment !== undefined) setExtraPayment(patch.extraPayment)
               }}
             />
-            <DebtsPanel debts={debts} onChange={setDebts} onLoadSample={() => setDebts(SAMPLE_DEBTS)} />
+            <DebtsPanel
+              debts={debts}
+              currency={currency}
+              onChange={setDebts}
+              onLoadSample={() => setDebts(SAMPLE_DEBTS)}
+            />
           </div>
 
           <div className="space-y-6 lg:col-span-3">
             {debts.length > 0 ? (
               <>
-                <StrategyPicker strategy={strategy} onSelect={setStrategy} avalanche={avalanche} snowball={snowball} />
-                <SummaryCards result={selected} baseline={baseline} />
+                <StrategyPicker
+                  strategy={strategy}
+                  onSelect={setStrategy}
+                  avalanche={avalanche}
+                  snowball={snowball}
+                  currency={currency}
+                />
+                <SummaryCards result={selected} baseline={baseline} currency={currency} />
                 <Suspense
                   fallback={
                     <div className="flex h-72 items-center justify-center rounded-2xl border border-slate-200 text-sm text-slate-400 dark:border-slate-800">
@@ -125,7 +141,7 @@ export default function App() {
                     </div>
                   }
                 >
-                  <PayoffChart avalanche={avalanche} snowball={snowball} strategy={strategy} />
+                  <PayoffChart avalanche={avalanche} snowball={snowball} strategy={strategy} currency={currency} />
                 </Suspense>
                 <Milestones
                   debts={debts}

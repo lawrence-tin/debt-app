@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import { Plus, Trash2, CreditCard } from 'lucide-react'
 import { CATEGORY_META, formatCurrency, makeId, totalBalance, totalMinPayment, type Debt, type DebtCategory } from '../lib/payoff'
+import { getCurrencySymbol } from '../lib/currencies'
 
 interface Props {
   debts: Debt[]
+  currency: string
   onChange: (debts: Debt[]) => void
   onLoadSample: () => void
 }
 
 const emptyDraft = { name: '', category: 'credit-card' as DebtCategory, balance: '', apr: '', minPayment: '' }
 
-export default function DebtsPanel({ debts, onChange, onLoadSample }: Props) {
+export default function DebtsPanel({ debts, currency, onChange, onLoadSample }: Props) {
+  const symbol = getCurrencySymbol(currency)
   const [draft, setDraft] = useState(emptyDraft)
   const [showForm, setShowForm] = useState(debts.length === 0)
 
@@ -45,7 +48,7 @@ export default function DebtsPanel({ debts, onChange, onLoadSample }: Props) {
         </div>
         {debts.length > 0 && (
           <span className="text-sm text-slate-500 dark:text-slate-400">
-            {formatCurrency(totalBalance(debts))} total · {formatCurrency(totalMinPayment(debts))}/mo min
+            {formatCurrency(totalBalance(debts), currency)} total · {formatCurrency(totalMinPayment(debts), currency)}/mo min
           </span>
         )}
       </div>
@@ -79,12 +82,15 @@ export default function DebtsPanel({ debts, onChange, onLoadSample }: Props) {
                 />
                 <label className="text-xs text-slate-500 dark:text-slate-400">
                   Balance
-                  <input
-                    type="number"
-                    value={d.balance}
-                    onChange={(e) => updateDebt(d.id, { balance: Number(e.target.value) || 0 })}
-                    className="mt-0.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                  />
+                  <div className="mt-0.5 flex items-center rounded-lg border border-slate-200 bg-slate-50 px-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800">
+                    <span className="mr-1 text-slate-400">{symbol}</span>
+                    <input
+                      type="number"
+                      value={d.balance}
+                      onChange={(e) => updateDebt(d.id, { balance: Number(e.target.value) || 0 })}
+                      className="w-full bg-transparent py-1.5 text-sm text-slate-900 outline-none dark:text-white"
+                    />
+                  </div>
                 </label>
                 <label className="text-xs text-slate-500 dark:text-slate-400">
                   APR %
@@ -98,12 +104,15 @@ export default function DebtsPanel({ debts, onChange, onLoadSample }: Props) {
                 </label>
                 <label className="text-xs text-slate-500 dark:text-slate-400">
                   Min payment
-                  <input
-                    type="number"
-                    value={d.minPayment}
-                    onChange={(e) => updateDebt(d.id, { minPayment: Number(e.target.value) || 0 })}
-                    className="mt-0.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                  />
+                  <div className="mt-0.5 flex items-center rounded-lg border border-slate-200 bg-slate-50 px-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800">
+                    <span className="mr-1 text-slate-400">{symbol}</span>
+                    <input
+                      type="number"
+                      value={d.minPayment}
+                      onChange={(e) => updateDebt(d.id, { minPayment: Number(e.target.value) || 0 })}
+                      className="w-full bg-transparent py-1.5 text-sm text-slate-900 outline-none dark:text-white"
+                    />
+                  </div>
                 </label>
                 <label className="text-xs text-slate-500 dark:text-slate-400">
                   Category
@@ -152,13 +161,16 @@ export default function DebtsPanel({ debts, onChange, onLoadSample }: Props) {
                 </option>
               ))}
             </select>
-            <input
-              type="number"
-              placeholder="Balance $"
-              value={draft.balance}
-              onChange={(e) => setDraft({ ...draft, balance: e.target.value })}
-              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-            />
+            <div className="flex items-center rounded-lg border border-slate-200 bg-white px-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900">
+              <span className="mr-1 text-slate-400">{symbol}</span>
+              <input
+                type="number"
+                placeholder="Balance"
+                value={draft.balance}
+                onChange={(e) => setDraft({ ...draft, balance: e.target.value })}
+                className="w-full bg-transparent py-1.5 text-sm text-slate-900 outline-none dark:text-white"
+              />
+            </div>
             <input
               type="number"
               step="0.01"
@@ -167,13 +179,16 @@ export default function DebtsPanel({ debts, onChange, onLoadSample }: Props) {
               onChange={(e) => setDraft({ ...draft, apr: e.target.value })}
               className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
             />
-            <input
-              type="number"
-              placeholder="Min payment $"
-              value={draft.minPayment}
-              onChange={(e) => setDraft({ ...draft, minPayment: e.target.value })}
-              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-            />
+            <div className="flex items-center rounded-lg border border-slate-200 bg-white px-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900">
+              <span className="mr-1 text-slate-400">{symbol}</span>
+              <input
+                type="number"
+                placeholder="Min payment"
+                value={draft.minPayment}
+                onChange={(e) => setDraft({ ...draft, minPayment: e.target.value })}
+                className="w-full bg-transparent py-1.5 text-sm text-slate-900 outline-none dark:text-white"
+              />
+            </div>
           </div>
           <div className="mt-3 flex gap-2">
             <button

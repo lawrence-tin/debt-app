@@ -7,6 +7,7 @@ export interface AppState {
   extraPayment: number
   strategy: Strategy
   theme: 'light' | 'dark'
+  currency: string
 }
 
 const KEY = 'clearpath.v1'

@@ -158,12 +158,17 @@ export function monthAtProgress(result: PayoffResult, originalTotal: number, fra
   return snap ? snap.month : null
 }
 
-export function formatCurrency(value: number, maximumFractionDigits = 0): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits,
-  }).format(value)
+export function formatCurrency(value: number, currencyCode: string = 'USD', maximumFractionDigits = 0): string {
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+      maximumFractionDigits,
+    }).format(value)
+  } catch {
+    // Unknown/unsupported currency code — fall back to a plain number with the code as suffix.
+    return `${value.toLocaleString('en-US', { maximumFractionDigits })} ${currencyCode}`
+  }
 }
 
 export function formatMonthsAsYears(months: number): string {
