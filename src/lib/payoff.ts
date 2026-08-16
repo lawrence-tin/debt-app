@@ -158,37 +158,35 @@ export function monthAtProgress(result: PayoffResult, originalTotal: number, fra
   return snap ? snap.month : null
 }
 
-export function formatCurrency(value: number, currencyCode: string = 'USD', maximumFractionDigits = 0): string {
+export function formatCurrency(
+  value: number,
+  currencyCode: string = 'USD',
+  locale: string = 'en-US',
+  maximumFractionDigits = 0,
+): string {
   try {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: currencyCode,
       maximumFractionDigits,
     }).format(value)
   } catch {
     // Unknown/unsupported currency code — fall back to a plain number with the code as suffix.
-    return `${value.toLocaleString('en-US', { maximumFractionDigits })} ${currencyCode}`
+    return `${value.toLocaleString(locale, { maximumFractionDigits })} ${currencyCode}`
   }
 }
 
-export function formatMonthsAsYears(months: number): string {
-  if (months <= 0) return '0 months'
-  const y = Math.floor(months / 12)
-  const m = months % 12
-  const parts: string[] = []
-  if (y > 0) parts.push(`${y} yr${y > 1 ? 's' : ''}`)
-  if (m > 0) parts.push(`${m} mo${m > 1 ? 's' : ''}`)
-  return parts.join(' ') || '0 months'
+/** Emoji shown next to each debt category; human-readable labels live in the i18n translations. */
+export const CATEGORY_EMOJI: Record<DebtCategory, string> = {
+  'credit-card': '💳',
+  'student-loan': '🎓',
+  'auto-loan': '🚗',
+  'personal-loan': '🏦',
+  medical: '🩺',
+  other: '📄',
 }
 
-export const CATEGORY_META: Record<DebtCategory, { label: string; emoji: string }> = {
-  'credit-card': { label: 'Credit Card', emoji: '💳' },
-  'student-loan': { label: 'Student Loan', emoji: '🎓' },
-  'auto-loan': { label: 'Auto Loan', emoji: '🚗' },
-  'personal-loan': { label: 'Personal Loan', emoji: '🏦' },
-  medical: { label: 'Medical', emoji: '🩺' },
-  other: { label: 'Other', emoji: '📄' },
-}
+export const DEBT_CATEGORIES: DebtCategory[] = Object.keys(CATEGORY_EMOJI) as DebtCategory[]
 
 export function makeId(): string {
   return Math.random().toString(36).slice(2, 10)

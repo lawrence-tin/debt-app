@@ -1,12 +1,14 @@
 import { CURRENCIES, POPULAR_CURRENCY_CODES } from '../lib/currencies'
+import type { Translation } from '../lib/i18n'
 
 interface Props {
   value: string
   onChange: (code: string) => void
+  t: Translation
   compact?: boolean
 }
 
-export default function CurrencySelector({ value, onChange, compact }: Props) {
+export default function CurrencySelector({ value, onChange, t, compact }: Props) {
   const popular = POPULAR_CURRENCY_CODES.map((code) => CURRENCIES.find((c) => c.code === code)).filter(
     (c): c is (typeof CURRENCIES)[number] => Boolean(c),
   )
@@ -16,14 +18,14 @@ export default function CurrencySelector({ value, onChange, compact }: Props) {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      aria-label="Currency"
+      aria-label={t.currency.ariaLabel}
       className={
         compact
           ? 'rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
           : 'w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white'
       }
     >
-      <optgroup label="Popular">
+      <optgroup label={t.currency.popular}>
         {popular.map((c) => (
           <option key={c.code} value={c.code}>
             {c.flag} {c.code} — {c.name}
@@ -31,7 +33,7 @@ export default function CurrencySelector({ value, onChange, compact }: Props) {
           </option>
         ))}
       </optgroup>
-      <optgroup label="All currencies (A–Z)">
+      <optgroup label={t.currency.all}>
         {rest.map((c) => (
           <option key={c.code} value={c.code}>
             {c.flag} {c.code} — {c.name}

@@ -1,14 +1,17 @@
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { formatCurrency, type PayoffResult, type Strategy } from '../lib/payoff'
+import type { Translation } from '../lib/i18n'
 
 interface Props {
   avalanche: PayoffResult
   snowball: PayoffResult
   strategy: Strategy
   currency: string
+  locale: string
+  t: Translation
 }
 
-export default function PayoffChart({ avalanche, snowball, strategy, currency }: Props) {
+export default function PayoffChart({ avalanche, snowball, strategy, currency, locale, t }: Props) {
   const maxMonth = Math.max(avalanche.history.at(-1)?.month ?? 0, snowball.history.at(-1)?.month ?? 0)
 
   const data = Array.from({ length: maxMonth + 1 }, (_, month) => {
@@ -23,15 +26,14 @@ export default function PayoffChart({ avalanche, snowball, strategy, currency }:
     }
   })
 
+  const avalancheLabel = t.strategyName.avalanche
+  const snowballLabel = t.strategyName.snowball
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">Balance over time</h2>
+      <h2 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">{t.chart.heading}</h2>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-        Your{' '}
-        <span className={strategy === 'avalanche' ? 'font-semibold text-emerald-500' : 'font-semibold text-sky-500'}>
-          {strategy === 'avalanche' ? 'avalanche' : 'snowball'}
-        </span>{' '}
-        plan is highlighted; the other strategy is shown for comparison.
+        {t.chart.subheading(strategy === 'avalanche' ? avalancheLabel : snowballLabel)}
       </p>
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
@@ -49,13 +51,13 @@ export default function PayoffChart({ avalanche, snowball, strategy, currency }:
             <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-slate-200 dark:text-slate-800" />
             <XAxis
               dataKey="month"
-              tickFormatter={(m) => `${m}mo`}
+              tickFormatter={(m) => t.chart.monthTick(m)}
               stroke="currentColor"
               className="text-xs text-slate-400"
               tickLine={false}
             />
             <YAxis
-              tickFormatter={(v) => formatCurrency(v, currency)}
+              tickFormatter={(v) => formatCurrency(v, currency, locale)}
               stroke="currentColor"
               className="text-xs text-slate-400"
               tickLine={false}
@@ -63,14 +65,14 @@ export default function PayoffChart({ avalanche, snowball, strategy, currency }:
             />
             <Tooltip
               formatter={(value, name) => [
-                formatCurrency(Number(value) || 0, currency),
-                name === 'avalanche' ? 'Avalanche' : 'Snowball',
+                formatCurrency(Number(value) || 0, currency, locale),
+                name === 'avalanche' ? avalancheLabel : snowballLabel,
               ]}
-              labelFormatter={(m) => `Month ${m}`}
+              labelFormatter={(m) => t.chart.monthLabel(Number(m) || 0)}
               contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.12)' }}
             />
             <Legend
-              formatter={(value) => (value === 'avalanche' ? 'Avalanche' : 'Snowball')}
+              formatter={(value) => (value === 'avalanche' ? avalancheLabel : snowballLabel)}
               wrapperStyle={{ fontSize: 13 }}
             />
             <Area

@@ -1,4 +1,5 @@
 import type { Debt, Strategy } from './payoff'
+import type { Locale } from './i18n'
 
 export interface AppState {
   debts: Debt[]
@@ -8,6 +9,7 @@ export interface AppState {
   strategy: Strategy
   theme: 'light' | 'dark'
   currency: string
+  language: Locale
 }
 
 const KEY = 'clearpath.v1'

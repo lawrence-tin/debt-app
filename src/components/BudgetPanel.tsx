@@ -1,6 +1,7 @@
 import { Wallet } from 'lucide-react'
 import { formatCurrency } from '../lib/payoff'
 import { getCurrencySymbol } from '../lib/currencies'
+import type { Translation } from '../lib/i18n'
 
 interface Props {
   monthlyIncome: number
@@ -8,6 +9,8 @@ interface Props {
   extraPayment: number
   totalMinPayment: number
   currency: string
+  locale: string
+  t: Translation
   onChange: (patch: Partial<{ monthlyIncome: number; fixedExpenses: number; extraPayment: number }>) => void
 }
 
@@ -17,6 +20,8 @@ export default function BudgetPanel({
   extraPayment,
   totalMinPayment,
   currency,
+  locale,
+  t,
   onChange,
 }: Props) {
   const totalDebtBudget = totalMinPayment + extraPayment
@@ -30,12 +35,12 @@ export default function BudgetPanel({
         <span className="rounded-lg bg-sky-500/10 p-1.5 text-sky-500">
           <Wallet size={18} />
         </span>
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Income &amp; budget</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t.budget.heading}</h2>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <label className="col-span-1 text-sm">
-          <span className="mb-1 block font-medium text-slate-600 dark:text-slate-300">Monthly income</span>
+          <span className="mb-1 block font-medium text-slate-600 dark:text-slate-300">{t.budget.monthlyIncome}</span>
           <div className="flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800">
             <span className="mr-1 text-slate-400">{symbol}</span>
             <input
@@ -44,13 +49,13 @@ export default function BudgetPanel({
               value={monthlyIncome || ''}
               onChange={(e) => onChange({ monthlyIncome: Number(e.target.value) || 0 })}
               className="w-full bg-transparent text-slate-900 outline-none dark:text-white"
-              placeholder="4,500"
+              placeholder={t.budget.monthlyIncomePlaceholder}
             />
           </div>
         </label>
 
         <label className="col-span-1 text-sm">
-          <span className="mb-1 block font-medium text-slate-600 dark:text-slate-300">Other monthly expenses</span>
+          <span className="mb-1 block font-medium text-slate-600 dark:text-slate-300">{t.budget.otherExpenses}</span>
           <div className="flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800">
             <span className="mr-1 text-slate-400">{symbol}</span>
             <input
@@ -59,7 +64,7 @@ export default function BudgetPanel({
               value={fixedExpenses || ''}
               onChange={(e) => onChange({ fixedExpenses: Number(e.target.value) || 0 })}
               className="w-full bg-transparent text-slate-900 outline-none dark:text-white"
-              placeholder="2,200"
+              placeholder={t.budget.otherExpensesPlaceholder}
             />
           </div>
         </label>
@@ -67,9 +72,9 @@ export default function BudgetPanel({
 
       <div className="mt-5">
         <div className="mb-1 flex items-baseline justify-between">
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Extra toward debt each month</span>
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{t.budget.extraToward}</span>
           <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-            {formatCurrency(extraPayment, currency)}
+            {formatCurrency(extraPayment, currency, locale)}
           </span>
         </div>
         <input
@@ -81,30 +86,30 @@ export default function BudgetPanel({
           onChange={(e) => onChange({ extraPayment: Number(e.target.value) })}
           className="w-full accent-emerald-500"
         />
-        <p className="mt-1 text-xs text-slate-400">On top of your required minimum payments.</p>
+        <p className="mt-1 text-xs text-slate-400">{t.budget.extraHint}</p>
       </div>
 
       <dl className="mt-5 space-y-2 rounded-xl bg-slate-50 p-4 text-sm dark:bg-slate-800/60">
         <div className="flex justify-between">
-          <dt className="text-slate-500 dark:text-slate-400">Required minimums</dt>
-          <dd className="font-medium text-slate-800 dark:text-slate-100">{formatCurrency(totalMinPayment, currency)}</dd>
+          <dt className="text-slate-500 dark:text-slate-400">{t.budget.requiredMinimums}</dt>
+          <dd className="font-medium text-slate-800 dark:text-slate-100">
+            {formatCurrency(totalMinPayment, currency, locale)}
+          </dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-slate-500 dark:text-slate-400">Total monthly debt budget</dt>
-          <dd className="font-semibold text-slate-900 dark:text-white">{formatCurrency(totalDebtBudget, currency)}</dd>
+          <dt className="text-slate-500 dark:text-slate-400">{t.budget.totalBudget}</dt>
+          <dd className="font-semibold text-slate-900 dark:text-white">
+            {formatCurrency(totalDebtBudget, currency, locale)}
+          </dd>
         </div>
         <div className="flex justify-between border-t border-slate-200 pt-2 dark:border-slate-700">
-          <dt className="text-slate-500 dark:text-slate-400">Left over</dt>
+          <dt className="text-slate-500 dark:text-slate-400">{t.budget.leftOver}</dt>
           <dd className={`font-semibold ${leftover < 0 ? 'text-rose-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
-            {formatCurrency(leftover, currency)}
+            {formatCurrency(leftover, currency, locale)}
           </dd>
         </div>
       </dl>
-      {leftover < 0 && (
-        <p className="mt-2 text-xs text-rose-500">
-          Your budget is running negative — reduce the extra payment or lower other expenses.
-        </p>
-      )}
+      {leftover < 0 && <p className="mt-2 text-xs text-rose-500">{t.budget.negativeWarning}</p>}
     </section>
   )
 }

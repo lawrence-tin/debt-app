@@ -6,6 +6,7 @@ import StrategyPicker from './components/StrategyPicker'
 import SummaryCards from './components/SummaryCards'
 import Milestones from './components/Milestones'
 import CurrencySelector from './components/CurrencySelector'
+import LanguageSelector from './components/LanguageSelector'
 
 const PayoffChart = lazy(() => import('./components/PayoffChart'))
 import ThemeToggle from './components/ThemeToggle'
@@ -13,6 +14,7 @@ import Confetti from './components/Confetti'
 import { simulatePayoff, totalBalance, totalMinPayment, type Debt, type Strategy } from './lib/payoff'
 import { loadState, saveState, SAMPLE_DEBTS } from './lib/storage'
 import { guessCurrencyFromLocale } from './lib/currencies'
+import { guessLocaleFromBrowser, LANGUAGE_META, TRANSLATIONS, type Locale } from './lib/i18n'
 
 const DEFAULTS = {
   debts: [] as Debt[],
@@ -39,15 +41,24 @@ export default function App() {
   const [strategy, setStrategy] = useState<Strategy>(saved?.strategy ?? DEFAULTS.strategy)
   const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme())
   const [currency, setCurrency] = useState<string>(saved?.currency ?? guessCurrencyFromLocale())
+  const [language, setLanguage] = useState<Locale>(saved?.language ?? guessLocaleFromBrowser())
   const [confettiTrigger, setConfettiTrigger] = useState(0)
+
+  const t = TRANSLATIONS[language]
+  const dateLocale = LANGUAGE_META[language].dateLocale
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
 
   useEffect(() => {
-    saveState({ debts, monthlyIncome, fixedExpenses, extraPayment, strategy, theme, currency })
-  }, [debts, monthlyIncome, fixedExpenses, extraPayment, strategy, theme, currency])
+    document.title = t.meta.documentTitle
+    document.documentElement.lang = language
+  }, [t, language])
+
+  useEffect(() => {
+    saveState({ debts, monthlyIncome, fixedExpenses, extraPayment, strategy, theme, currency, language })
+  }, [debts, monthlyIncome, fixedExpenses, extraPayment, strategy, theme, currency, language])
 
   const minPayment = totalMinPayment(debts)
   const originalTotal = totalBalance(debts)
@@ -59,7 +70,7 @@ export default function App() {
   const selected = strategy === 'avalanche' ? avalanche : snowball
 
   function resetAll() {
-    if (!confirm('Clear all your data and start fresh?')) return
+    if (!confirm(t.app.confirmReset)) return
     setDebts([])
     setMonthlyIncome(DEFAULTS.monthlyIncome)
     setFixedExpenses(DEFAULTS.fixedExpenses)
@@ -80,12 +91,13 @@ export default function App() {
             <span className="text-lg font-semibold tracking-tight">ClearPath</span>
           </div>
           <div className="flex items-center gap-2">
-            <CurrencySelector value={currency} onChange={setCurrency} compact />
+            <LanguageSelector value={language} onChange={setLanguage} t={t} />
+            <CurrencySelector value={currency} onChange={setCurrency} t={t} compact />
             <button
               onClick={resetAll}
               className="hidden items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-700 sm:inline-flex dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
             >
-              <RotateCcw size={13} /> Start over
+              <RotateCcw size={13} /> {t.app.startOver}
             </button>
             <ThemeToggle theme={theme} onToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')} />
           </div>
@@ -94,11 +106,8 @@ export default function App() {
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <div className="mb-8 animate-rise">
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Plan your path to debt-free.</h1>
-          <p className="mt-2 max-w-2xl text-slate-500 dark:text-slate-400">
-            Add what you owe, tell us what you can put toward it each month, and ClearPath builds a real, personalized
-            payoff plan — no spreadsheet required.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t.app.title}</h1>
+          <p className="mt-2 max-w-2xl text-slate-500 dark:text-slate-400">{t.app.subtitle}</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
@@ -109,6 +118,8 @@ export default function App() {
               extraPayment={extraPayment}
               totalMinPayment={minPayment}
               currency={currency}
+              locale={dateLocale}
+              t={t}
               onChange={(patch) => {
                 if (patch.monthlyIncome !== undefined) setMonthlyIncome(patch.monthlyIncome)
                 if (patch.fixedExpenses !== undefined) setFixedExpenses(patch.fixedExpenses)
@@ -118,6 +129,8 @@ export default function App() {
             <DebtsPanel
               debts={debts}
               currency={currency}
+              locale={dateLocale}
+              t={t}
               onChange={setDebts}
               onLoadSample={() => setDebts(SAMPLE_DEBTS)}
             />
@@ -132,8 +145,10 @@ export default function App() {
                   avalanche={avalanche}
                   snowball={snowball}
                   currency={currency}
+                  locale={dateLocale}
+                  t={t}
                 />
-                <SummaryCards result={selected} baseline={baseline} currency={currency} />
+                <SummaryCards result={selected} baseline={baseline} currency={currency} locale={dateLocale} t={t} />
                 <Suspense
                   fallback={
                     <div className="flex h-72 items-center justify-center rounded-2xl border border-slate-200 text-sm text-slate-400 dark:border-slate-800">
@@ -141,24 +156,28 @@ export default function App() {
                     </div>
                   }
                 >
-                  <PayoffChart avalanche={avalanche} snowball={snowball} strategy={strategy} currency={currency} />
+                  <PayoffChart
+                    avalanche={avalanche}
+                    snowball={snowball}
+                    strategy={strategy}
+                    currency={currency}
+                    locale={dateLocale}
+                    t={t}
+                  />
                 </Suspense>
                 <Milestones
                   debts={debts}
                   result={selected}
                   originalTotal={originalTotal}
+                  t={t}
                   onCelebrate={() => setConfettiTrigger((n) => n + 1)}
                 />
               </>
             ) : (
               <div className="flex h-full min-h-[300px] items-center justify-center rounded-2xl border border-dashed border-slate-300 p-10 text-center dark:border-slate-700">
                 <div>
-                  <p className="text-lg font-medium text-slate-600 dark:text-slate-300">
-                    Add a debt to see your personalized plan.
-                  </p>
-                  <p className="mt-1 text-sm text-slate-400">
-                    Your debt-free date, total interest, and milestones will appear here.
-                  </p>
+                  <p className="text-lg font-medium text-slate-600 dark:text-slate-300">{t.app.emptyTitle}</p>
+                  <p className="mt-1 text-sm text-slate-400">{t.app.emptySubtitle}</p>
                 </div>
               </div>
             )}
@@ -167,8 +186,7 @@ export default function App() {
       </main>
 
       <footer className="mt-12 border-t border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
-        ClearPath is a planning tool for educational purposes and stores your data only in this browser — nothing is
-        sent to a server.
+        {t.app.footer}
       </footer>
     </div>
   )
