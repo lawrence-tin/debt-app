@@ -26,16 +26,16 @@ export default function CurrencySelector({ value, onChange, compact }: Props) {
       <optgroup label="Popular">
         {popular.map((c) => (
           <option key={c.code} value={c.code}>
-            {c.symbol !== c.code ? `${c.symbol} ` : ''}
-            {c.code} — {c.name}
+            {c.flag} {c.code} — {c.name}
+            {c.symbol !== c.code ? ` (${c.symbol})` : ''}
           </option>
         ))}
       </optgroup>
       <optgroup label="All currencies (A–Z)">
         {rest.map((c) => (
           <option key={c.code} value={c.code}>
-            {c.symbol !== c.code ? `${c.symbol} ` : ''}
-            {c.code} — {c.name}
+            {c.flag} {c.code} — {c.name}
+            {c.symbol !== c.code ? ` (${c.symbol})` : ''}
           </option>
         ))}
       </optgroup>
