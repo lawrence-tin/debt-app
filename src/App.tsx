@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import BudgetPanel from './components/BudgetPanel'
 import DebtsPanel from './components/DebtsPanel'
@@ -7,14 +7,27 @@ import SummaryCards from './components/SummaryCards'
 import Milestones from './components/Milestones'
 import CurrencySelector from './components/CurrencySelector'
 import LanguageSelector from './components/LanguageSelector'
+import AccountMenu from './components/AccountMenu'
+import AuthModal from './components/AuthModal'
+import ImportPrompt from './components/ImportPrompt'
 
 const PayoffChart = lazy(() => import('./components/PayoffChart'))
 import ThemeToggle from './components/ThemeToggle'
 import Confetti from './components/Confetti'
-import { simulatePayoff, totalBalance, totalMinPayment, type Debt, type Strategy } from './lib/payoff'
+import { makeId, simulatePayoff, totalBalance, totalMinPayment, type Debt, type Strategy } from './lib/payoff'
 import { loadState, saveState, SAMPLE_DEBTS } from './lib/storage'
 import { guessCurrencyFromLocale } from './lib/currencies'
 import { guessLocaleFromBrowser, LANGUAGE_META, TRANSLATIONS, type Locale } from './lib/i18n'
+import { isCloudConfigured } from './lib/supabase'
+import { signOut as authSignOut, useAuth } from './lib/useAuth'
+import {
+  fetchCloudDebts,
+  fetchCloudSettings,
+  replaceAllDebtsRemote,
+  syncDebtsDiff,
+  upsertSettingsRemote,
+  type CloudSettings,
+} from './lib/cloud'
 
 const DEFAULTS = {
   debts: [] as Debt[],
@@ -44,6 +57,14 @@ export default function App() {
   const [language, setLanguage] = useState<Locale>(saved?.language ?? guessLocaleFromBrowser())
   const [confettiTrigger, setConfettiTrigger] = useState(0)
 
+  const { user } = useAuth()
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [importPending, setImportPending] = useState(false)
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle')
+  const cloudDebtsRef = useRef<Debt[]>(debts)
+  const hydratingRef = useRef(false)
+  const handledUserIdRef = useRef<string | null>(null)
+
   const t = TRANSLATIONS[language]
   const dateLocale = LANGUAGE_META[language].dateLocale
 
@@ -60,6 +81,77 @@ export default function App() {
     saveState({ debts, monthlyIncome, fixedExpenses, extraPayment, strategy, theme, currency, language })
   }, [debts, monthlyIncome, fixedExpenses, extraPayment, strategy, theme, currency, language])
 
+  // On sign-in: pull the account's cloud data down, or offer to import what's in this browser.
+  useEffect(() => {
+    if (!user) {
+      handledUserIdRef.current = null
+      return
+    }
+    if (handledUserIdRef.current === user.id) return
+    handledUserIdRef.current = user.id
+
+    let cancelled = false
+    hydratingRef.current = true
+    setSyncStatus('syncing')
+    ;(async () => {
+      try {
+        const [cloudDebts, cloudSettings] = await Promise.all([fetchCloudDebts(user.id), fetchCloudSettings(user.id)])
+        if (cancelled) return
+
+        if (cloudDebts.length > 0 || cloudSettings) {
+          setDebts(cloudDebts)
+          cloudDebtsRef.current = cloudDebts
+          if (cloudSettings) {
+            setMonthlyIncome(cloudSettings.monthlyIncome)
+            setFixedExpenses(cloudSettings.fixedExpenses)
+            setExtraPayment(cloudSettings.extraPayment)
+            setStrategy(cloudSettings.strategy)
+            setCurrency(cloudSettings.currency)
+            setLanguage(cloudSettings.language)
+            setTheme(cloudSettings.theme)
+          }
+          setSyncStatus('synced')
+        } else if (debts.length > 0) {
+          setImportPending(true)
+          setSyncStatus('idle')
+        } else {
+          await upsertSettingsRemote(user.id, {
+            monthlyIncome,
+            fixedExpenses,
+            extraPayment,
+            strategy,
+            currency,
+            language,
+            theme,
+          })
+          cloudDebtsRef.current = []
+          setSyncStatus('synced')
+        }
+      } catch {
+        setSyncStatus('idle')
+      } finally {
+        if (!cancelled) hydratingRef.current = false
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
+  // Debounced settings sync while signed in.
+  useEffect(() => {
+    if (!user || hydratingRef.current || importPending) return
+    const timeout = setTimeout(() => {
+      setSyncStatus('syncing')
+      upsertSettingsRemote(user.id, { monthlyIncome, fixedExpenses, extraPayment, strategy, currency, language, theme })
+        .then(() => setSyncStatus('synced'))
+        .catch(() => setSyncStatus('idle'))
+    }, 700)
+    return () => clearTimeout(timeout)
+  }, [user, monthlyIncome, fixedExpenses, extraPayment, strategy, currency, language, theme, importPending])
+
   const minPayment = totalMinPayment(debts)
   const originalTotal = totalBalance(debts)
   const budget = minPayment + extraPayment
@@ -69,9 +161,60 @@ export default function App() {
   const baseline = useMemo(() => simulatePayoff(debts, strategy, minPayment), [debts, strategy, minPayment])
   const selected = strategy === 'avalanche' ? avalanche : snowball
 
+  function handleDebtsChange(next: Debt[]) {
+    setDebts(next)
+    if (user && !hydratingRef.current && !importPending) {
+      const before = cloudDebtsRef.current
+      cloudDebtsRef.current = next
+      setSyncStatus('syncing')
+      syncDebtsDiff(user.id, before, next)
+        .then(() => setSyncStatus('synced'))
+        .catch(() => setSyncStatus('idle'))
+    }
+  }
+
+  function currentSettings(): CloudSettings {
+    return { monthlyIncome, fixedExpenses, extraPayment, strategy, currency, language, theme }
+  }
+
+  async function handleImport() {
+    if (!user) return
+    setImportPending(false)
+    setSyncStatus('syncing')
+    try {
+      await replaceAllDebtsRemote(user.id, debts)
+      await upsertSettingsRemote(user.id, currentSettings())
+      cloudDebtsRef.current = debts
+      setSyncStatus('synced')
+    } catch {
+      setSyncStatus('idle')
+    }
+  }
+
+  async function handleDiscardImport() {
+    if (!user) return
+    setImportPending(false)
+    setDebts([])
+    cloudDebtsRef.current = []
+    setSyncStatus('syncing')
+    try {
+      await replaceAllDebtsRemote(user.id, [])
+      await upsertSettingsRemote(user.id, currentSettings())
+      setSyncStatus('synced')
+    } catch {
+      setSyncStatus('idle')
+    }
+  }
+
+  async function handleSignOut() {
+    await authSignOut()
+    cloudDebtsRef.current = []
+    setSyncStatus('idle')
+  }
+
   function resetAll() {
     if (!confirm(t.app.confirmReset)) return
-    setDebts([])
+    handleDebtsChange([])
     setMonthlyIncome(DEFAULTS.monthlyIncome)
     setFixedExpenses(DEFAULTS.fixedExpenses)
     setExtraPayment(DEFAULTS.extraPayment)
@@ -81,6 +224,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900 dark:from-slate-950 dark:to-slate-900 dark:text-slate-100">
       <Confetti trigger={confettiTrigger} />
+      {showAuthModal && <AuthModal t={t} onClose={() => setShowAuthModal(false)} />}
 
       <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
@@ -99,6 +243,15 @@ export default function App() {
             >
               <RotateCcw size={13} /> {t.app.startOver}
             </button>
+            {isCloudConfigured && (
+              <AccountMenu
+                user={user}
+                syncStatus={syncStatus}
+                t={t}
+                onSignIn={() => setShowAuthModal(true)}
+                onSignOut={handleSignOut}
+              />
+            )}
             <ThemeToggle theme={theme} onToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')} />
           </div>
         </div>
@@ -109,6 +262,8 @@ export default function App() {
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t.app.title}</h1>
           <p className="mt-2 max-w-2xl text-slate-500 dark:text-slate-400">{t.app.subtitle}</p>
         </div>
+
+        {importPending && <ImportPrompt t={t} onImport={handleImport} onDiscard={handleDiscardImport} />}
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="space-y-6 lg:col-span-2">
@@ -131,8 +286,8 @@ export default function App() {
               currency={currency}
               locale={dateLocale}
               t={t}
-              onChange={setDebts}
-              onLoadSample={() => setDebts(SAMPLE_DEBTS)}
+              onChange={handleDebtsChange}
+              onLoadSample={() => handleDebtsChange(SAMPLE_DEBTS.map((d) => ({ ...d, id: makeId() })))}
             />
           </div>
 

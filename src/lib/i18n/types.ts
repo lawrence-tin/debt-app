@@ -93,4 +93,35 @@ export interface Translation {
     months: (n: number) => string
     zero: string
   }
+  auth: {
+    signIn: string
+    signUp: string
+    signOut: string
+    email: string
+    password: string
+    confirmPassword: string
+    forgotPassword: string
+    resetPassword: string
+    resetPasswordBody: string
+    resetPasswordSent: (email: string) => string
+    noAccount: string
+    hasAccount: string
+    welcomeBack: string
+    createAccount: string
+    signInCta: string
+    signUpCta: string
+    sendResetLink: string
+    backToSignIn: string
+    close: string
+    passwordMismatch: string
+    passwordTooShort: string
+    genericError: string
+    confirmEmailSent: (email: string) => string
+    syncing: string
+    synced: string
+    importPromptTitle: string
+    importPromptBody: string
+    importYes: string
+    importNo: string
+  }
 }

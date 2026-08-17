@@ -25,3 +25,8 @@ dist-ssr
 
 # Local Netlify folder
 .netlify
+
+# Environment variables (Supabase keys, etc.)
+.env
+.env.*
+!.env.example
