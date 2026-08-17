@@ -116,6 +116,11 @@ export interface Translation {
     passwordMismatch: string
     passwordTooShort: string
     genericError: string
+    rateLimited: string
+    emailInUse: string
+    invalidCredentials: string
+    emailNotConfirmed: string
+    invalidEmail: string
     confirmEmailSent: (email: string) => string
     syncing: string
     synced: string

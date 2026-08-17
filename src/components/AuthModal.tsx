@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Loader2, Lock, Mail, X } from 'lucide-react'
+import type { AuthError } from '@supabase/supabase-js'
 import { sendPasswordReset, signIn, signUp } from '../lib/useAuth'
 import type { Translation } from '../lib/i18n'
 
@@ -8,6 +9,31 @@ type Mode = 'signin' | 'signup' | 'forgot'
 interface Props {
   t: Translation
   onClose: () => void
+}
+
+/** Maps known Supabase Auth error codes to a translated, actionable message. */
+function authErrorMessage(err: unknown, t: Translation): string {
+  const code = (err as Partial<AuthError> | undefined)?.code
+  switch (code) {
+    case 'over_email_send_rate_limit':
+    case 'over_request_rate_limit':
+      return t.auth.rateLimited
+    case 'user_already_exists':
+    case 'email_exists':
+    case 'identity_already_exists':
+      return t.auth.emailInUse
+    case 'invalid_credentials':
+      return t.auth.invalidCredentials
+    case 'email_not_confirmed':
+      return t.auth.emailNotConfirmed
+    case 'email_address_invalid':
+    case 'validation_failed':
+      return t.auth.invalidEmail
+    case 'weak_password':
+      return t.auth.passwordTooShort
+    default:
+      return t.auth.genericError
+  }
 }
 
 export default function AuthModal({ t, onClose }: Props) {
@@ -36,8 +62,8 @@ export default function AuthModal({ t, onClose }: Props) {
         const { error: err } = await sendPasswordReset(email)
         if (err) throw err
         setMessage(t.auth.resetPasswordSent(email))
-      } catch {
-        setError(t.auth.genericError)
+      } catch (err) {
+        setError(authErrorMessage(err, t))
       } finally {
         setLoading(false)
       }
@@ -68,8 +94,8 @@ export default function AuthModal({ t, onClose }: Props) {
         if (err) throw err
         onClose()
       }
-    } catch {
-      setError(t.auth.genericError)
+    } catch (err) {
+      setError(authErrorMessage(err, t))
     } finally {
       setLoading(false)
     }
