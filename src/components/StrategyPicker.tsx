@@ -1,4 +1,4 @@
-import { Flame, Snowflake } from 'lucide-react'
+import { Flame, ListOrdered, Snowflake } from 'lucide-react'
 import { formatCurrency, type PayoffResult, type Strategy } from '../lib/payoff'
 import { formatMonthsAsYears, type Translation } from '../lib/i18n'
 
@@ -7,12 +7,13 @@ interface Props {
   onSelect: (s: Strategy) => void
   avalanche: PayoffResult
   snowball: PayoffResult
+  custom: PayoffResult
   currency: string
   locale: string
   t: Translation
 }
 
-export default function StrategyPicker({ strategy, onSelect, avalanche, snowball, currency, locale, t }: Props) {
+export default function StrategyPicker({ strategy, onSelect, avalanche, snowball, custom, currency, locale, t }: Props) {
   const cheaper: Strategy = avalanche.totalInterestPaid <= snowball.totalInterestPaid ? 'avalanche' : 'snowball'
   const savings = Math.abs(avalanche.totalInterestPaid - snowball.totalInterestPaid)
 
@@ -31,6 +32,13 @@ export default function StrategyPicker({ strategy, onSelect, avalanche, snowball
       icon: <Snowflake size={18} />,
       result: snowball,
     },
+    {
+      key: 'custom',
+      title: t.strategy.customTitle,
+      desc: t.strategy.customDesc,
+      icon: <ListOrdered size={18} />,
+      result: custom,
+    },
   ]
 
   return (
@@ -38,7 +46,7 @@ export default function StrategyPicker({ strategy, onSelect, avalanche, snowball
       <h2 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">{t.strategy.heading}</h2>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">{t.strategy.subheading}</p>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
         {cards.map(({ key, title, desc, icon, result }) => {
           const active = strategy === key
           return (

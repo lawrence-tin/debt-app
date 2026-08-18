@@ -3,13 +3,14 @@ import { RotateCcw } from 'lucide-react'
 import BudgetPanel from './components/BudgetPanel'
 import DebtsPanel from './components/DebtsPanel'
 import StrategyPicker from './components/StrategyPicker'
+import PriorityList from './components/PriorityList'
 import SummaryCards from './components/SummaryCards'
+import Reminders from './components/Reminders'
 import Milestones from './components/Milestones'
 import CurrencySelector from './components/CurrencySelector'
 import LanguageSelector from './components/LanguageSelector'
 import AccountMenu from './components/AccountMenu'
 import AuthModal from './components/AuthModal'
-import ImportPrompt from './components/ImportPrompt'
 
 const PayoffChart = lazy(() => import('./components/PayoffChart'))
 import ThemeToggle from './components/ThemeToggle'
@@ -20,14 +21,7 @@ import { guessCurrencyFromLocale } from './lib/currencies'
 import { guessLocaleFromBrowser, LANGUAGE_META, TRANSLATIONS, type Locale } from './lib/i18n'
 import { isCloudConfigured } from './lib/supabase'
 import { signOut as authSignOut, useAuth } from './lib/useAuth'
-import {
-  fetchCloudDebts,
-  fetchCloudSettings,
-  replaceAllDebtsRemote,
-  syncDebtsDiff,
-  upsertSettingsRemote,
-  type CloudSettings,
-} from './lib/cloud'
+import { fetchCloudDebts, fetchCloudSettings, syncDebtsDiff, upsertSettingsRemote, type CloudSettings } from './lib/cloud'
 
 const DEFAULTS = {
   debts: [] as Debt[],
@@ -35,6 +29,7 @@ const DEFAULTS = {
   fixedExpenses: 2200,
   extraPayment: 150,
   strategy: 'avalanche' as Strategy,
+  priorityOrder: [] as string[],
   theme: 'light' as 'light' | 'dark',
 }
 
@@ -45,6 +40,14 @@ function getInitialTheme(): 'light' | 'dark' {
   return 'light'
 }
 
+/** Appends newly-added debt ids to the end and drops removed ones, keeping existing ranks stable. */
+function reconcilePriorityOrder(order: string[], debts: Debt[]): string[] {
+  const debtIds = new Set(debts.map((d) => d.id))
+  const kept = order.filter((id) => debtIds.has(id))
+  const missing = debts.filter((d) => !order.includes(d.id)).map((d) => d.id)
+  return [...kept, ...missing]
+}
+
 export default function App() {
   const saved = useMemo(() => loadState(), [])
   const [debts, setDebts] = useState<Debt[]>(saved?.debts ?? DEFAULTS.debts)
@@ -52,6 +55,9 @@ export default function App() {
   const [fixedExpenses, setFixedExpenses] = useState(saved?.fixedExpenses ?? DEFAULTS.fixedExpenses)
   const [extraPayment, setExtraPayment] = useState(saved?.extraPayment ?? DEFAULTS.extraPayment)
   const [strategy, setStrategy] = useState<Strategy>(saved?.strategy ?? DEFAULTS.strategy)
+  const [priorityOrder, setPriorityOrder] = useState<string[]>(
+    reconcilePriorityOrder(saved?.priorityOrder ?? DEFAULTS.priorityOrder, saved?.debts ?? DEFAULTS.debts),
+  )
   const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme())
   const [currency, setCurrency] = useState<string>(saved?.currency ?? guessCurrencyFromLocale())
   const [language, setLanguage] = useState<Locale>(saved?.language ?? guessLocaleFromBrowser())
@@ -59,7 +65,6 @@ export default function App() {
 
   const { user } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const [importPending, setImportPending] = useState(false)
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle')
   const cloudDebtsRef = useRef<Debt[]>(debts)
   const hydratingRef = useRef(false)
@@ -78,10 +83,25 @@ export default function App() {
   }, [t, language])
 
   useEffect(() => {
-    saveState({ debts, monthlyIncome, fixedExpenses, extraPayment, strategy, theme, currency, language })
-  }, [debts, monthlyIncome, fixedExpenses, extraPayment, strategy, theme, currency, language])
+    saveState({
+      debts,
+      monthlyIncome,
+      fixedExpenses,
+      extraPayment,
+      strategy,
+      priorityOrder,
+      theme,
+      currency,
+      language,
+    })
+  }, [debts, monthlyIncome, fixedExpenses, extraPayment, strategy, priorityOrder, theme, currency, language])
 
-  // On sign-in: pull the account's cloud data down, or offer to import what's in this browser.
+  function currentSettings(): CloudSettings {
+    return { monthlyIncome, fixedExpenses, extraPayment, strategy, priorityOrder, currency, language, theme }
+  }
+
+  // On sign-in: pull the account's cloud data down, or — for a brand-new account — push
+  // whatever is already in this browser up, so nothing created while signed out is lost.
   useEffect(() => {
     if (!user) {
       handledUserIdRef.current = null
@@ -106,27 +126,18 @@ export default function App() {
             setFixedExpenses(cloudSettings.fixedExpenses)
             setExtraPayment(cloudSettings.extraPayment)
             setStrategy(cloudSettings.strategy)
+            setPriorityOrder(reconcilePriorityOrder(cloudSettings.priorityOrder, cloudDebts))
             setCurrency(cloudSettings.currency)
             setLanguage(cloudSettings.language)
             setTheme(cloudSettings.theme)
           }
-          setSyncStatus('synced')
-        } else if (debts.length > 0) {
-          setImportPending(true)
-          setSyncStatus('idle')
         } else {
-          await upsertSettingsRemote(user.id, {
-            monthlyIncome,
-            fixedExpenses,
-            extraPayment,
-            strategy,
-            currency,
-            language,
-            theme,
-          })
-          cloudDebtsRef.current = []
-          setSyncStatus('synced')
+          // Fresh account: adopt whatever is currently in this browser as the starting point.
+          await syncDebtsDiff(user.id, [], debts)
+          await upsertSettingsRemote(user.id, currentSettings())
+          cloudDebtsRef.current = debts
         }
+        setSyncStatus('synced')
       } catch {
         setSyncStatus('idle')
       } finally {
@@ -142,15 +153,16 @@ export default function App() {
 
   // Debounced settings sync while signed in.
   useEffect(() => {
-    if (!user || hydratingRef.current || importPending) return
+    if (!user || hydratingRef.current) return
     const timeout = setTimeout(() => {
       setSyncStatus('syncing')
-      upsertSettingsRemote(user.id, { monthlyIncome, fixedExpenses, extraPayment, strategy, currency, language, theme })
+      upsertSettingsRemote(user.id, currentSettings())
         .then(() => setSyncStatus('synced'))
         .catch(() => setSyncStatus('idle'))
     }, 700)
     return () => clearTimeout(timeout)
-  }, [user, monthlyIncome, fixedExpenses, extraPayment, strategy, currency, language, theme, importPending])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, monthlyIncome, fixedExpenses, extraPayment, strategy, priorityOrder, currency, language, theme])
 
   const minPayment = totalMinPayment(debts)
   const originalTotal = totalBalance(debts)
@@ -158,51 +170,27 @@ export default function App() {
 
   const avalanche = useMemo(() => simulatePayoff(debts, 'avalanche', budget), [debts, budget])
   const snowball = useMemo(() => simulatePayoff(debts, 'snowball', budget), [debts, budget])
-  const baseline = useMemo(() => simulatePayoff(debts, strategy, minPayment), [debts, strategy, minPayment])
-  const selected = strategy === 'avalanche' ? avalanche : snowball
+  const custom = useMemo(
+    () => simulatePayoff(debts, 'custom', budget, new Date(), priorityOrder),
+    [debts, budget, priorityOrder],
+  )
+  const baseline = useMemo(
+    () => simulatePayoff(debts, strategy, minPayment, new Date(), priorityOrder),
+    [debts, strategy, minPayment, priorityOrder],
+  )
+  const results: Record<Strategy, typeof avalanche> = { avalanche, snowball, custom }
+  const selected = results[strategy]
 
   function handleDebtsChange(next: Debt[]) {
     setDebts(next)
-    if (user && !hydratingRef.current && !importPending) {
+    setPriorityOrder((order) => reconcilePriorityOrder(order, next))
+    if (user && !hydratingRef.current) {
       const before = cloudDebtsRef.current
       cloudDebtsRef.current = next
       setSyncStatus('syncing')
       syncDebtsDiff(user.id, before, next)
         .then(() => setSyncStatus('synced'))
         .catch(() => setSyncStatus('idle'))
-    }
-  }
-
-  function currentSettings(): CloudSettings {
-    return { monthlyIncome, fixedExpenses, extraPayment, strategy, currency, language, theme }
-  }
-
-  async function handleImport() {
-    if (!user) return
-    setImportPending(false)
-    setSyncStatus('syncing')
-    try {
-      await replaceAllDebtsRemote(user.id, debts)
-      await upsertSettingsRemote(user.id, currentSettings())
-      cloudDebtsRef.current = debts
-      setSyncStatus('synced')
-    } catch {
-      setSyncStatus('idle')
-    }
-  }
-
-  async function handleDiscardImport() {
-    if (!user) return
-    setImportPending(false)
-    setDebts([])
-    cloudDebtsRef.current = []
-    setSyncStatus('syncing')
-    try {
-      await replaceAllDebtsRemote(user.id, [])
-      await upsertSettingsRemote(user.id, currentSettings())
-      setSyncStatus('synced')
-    } catch {
-      setSyncStatus('idle')
     }
   }
 
@@ -219,6 +207,7 @@ export default function App() {
     setFixedExpenses(DEFAULTS.fixedExpenses)
     setExtraPayment(DEFAULTS.extraPayment)
     setStrategy(DEFAULTS.strategy)
+    setPriorityOrder([])
   }
 
   return (
@@ -263,8 +252,6 @@ export default function App() {
           <p className="mt-2 max-w-2xl text-slate-500 dark:text-slate-400">{t.app.subtitle}</p>
         </div>
 
-        {importPending && <ImportPrompt t={t} onImport={handleImport} onDiscard={handleDiscardImport} />}
-
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="space-y-6 lg:col-span-2">
             <BudgetPanel
@@ -289,6 +276,7 @@ export default function App() {
               onChange={handleDebtsChange}
               onLoadSample={() => handleDebtsChange(SAMPLE_DEBTS.map((d) => ({ ...d, id: makeId() })))}
             />
+            <Reminders debts={debts} t={t} />
           </div>
 
           <div className="space-y-6 lg:col-span-3">
@@ -299,10 +287,14 @@ export default function App() {
                   onSelect={setStrategy}
                   avalanche={avalanche}
                   snowball={snowball}
+                  custom={custom}
                   currency={currency}
                   locale={dateLocale}
                   t={t}
                 />
+                {strategy === 'custom' && (
+                  <PriorityList debts={debts} order={custom.order} onReorder={setPriorityOrder} t={t} />
+                )}
                 <SummaryCards result={selected} baseline={baseline} currency={currency} locale={dateLocale} t={t} />
                 <Suspense
                   fallback={
@@ -314,6 +306,7 @@ export default function App() {
                   <PayoffChart
                     avalanche={avalanche}
                     snowball={snowball}
+                    custom={custom}
                     strategy={strategy}
                     currency={currency}
                     locale={dateLocale}
@@ -324,6 +317,9 @@ export default function App() {
                   debts={debts}
                   result={selected}
                   originalTotal={originalTotal}
+                  strategy={strategy}
+                  currency={currency}
+                  locale={dateLocale}
                   t={t}
                   onCelebrate={() => setConfettiTrigger((n) => n + 1)}
                 />

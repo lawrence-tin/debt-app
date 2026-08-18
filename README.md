@@ -14,13 +14,15 @@ to your own account (backed by Supabase) so they follow you across devices.
 
 - Add unlimited debts (credit cards, student loans, auto loans, etc.)
 - Set your income, expenses, and how much extra you can put toward debt
-- Live comparison of avalanche vs. snowball strategies, with the cheaper
-  option automatically flagged
+- Live comparison of avalanche, snowball, **and a custom strategy** where you
+  rank debts yourself (reorder with one click, no drag-and-drop needed)
 - Debt-free date, total interest paid, interest saved vs. minimum-only
   payments, and time saved
-- Balance-over-time chart (Recharts)
+- Balance-over-time chart (Recharts) comparing all three strategies at once
 - Milestone checkpoints (25% / 50% / 75% / 100% paid off) and a payoff
   order timeline
+- Optional due day per debt, with an upcoming-payments reminder panel
+- One-click PDF report of your full payoff plan
 - Every currency (160 ISO codes, with flags) and three languages (English,
   Español, Français)
 - Light/dark theme toggle
@@ -34,6 +36,7 @@ to your own account (backed by Supabase) so they follow you across devices.
 - [Recharts](https://recharts.org) for the payoff chart
 - [lucide-react](https://lucide.dev) icons
 - [Supabase](https://supabase.com) (Postgres + Auth) for optional account sync
+- [jsPDF](https://github.com/parallax/jsPDF) (lazy-loaded) for the PDF report
 
 ## Getting started
 
@@ -72,6 +75,12 @@ browser — no custom backend server required.
 For a Netlify deploy, set the same two variables as **Environment
 variables** in Site configuration → Environment (they're needed at build
 time since Vite inlines them).
+
+**Already set this up before?** `supabase/schema.sql` is safe to re-run any
+time — it only adds what's missing (`if not exists` throughout) and never
+drops data. Re-run it whenever you pull an update that touches the schema
+(check the file's git history, or just re-run it whenever cloud sync starts
+returning "column not found" errors).
 
 ## Deploying to Netlify
 

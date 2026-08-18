@@ -1,21 +1,36 @@
-import { PartyPopper } from 'lucide-react'
-import { CATEGORY_EMOJI, monthAtProgress, type Debt, type PayoffResult } from '../lib/payoff'
+import { useState } from 'react'
+import { Download, Loader2, PartyPopper } from 'lucide-react'
+import { CATEGORY_EMOJI, monthAtProgress, type Debt, type PayoffResult, type Strategy } from '../lib/payoff'
 import { formatMonthsAsYears, type Translation } from '../lib/i18n'
+import { downloadPayoffReportPdf } from '../lib/report'
 
 interface Props {
   debts: Debt[]
   result: PayoffResult
   originalTotal: number
+  strategy: Strategy
+  currency: string
+  locale: string
   t: Translation
   onCelebrate: () => void
 }
 
 const CHECKPOINTS = [0.25, 0.5, 0.75, 1]
 
-export default function Milestones({ debts, result, originalTotal, t, onCelebrate }: Props) {
+export default function Milestones({ debts, result, originalTotal, strategy, currency, locale, t, onCelebrate }: Props) {
+  const [downloading, setDownloading] = useState(false)
   const payoffOrder = [...debts]
     .filter((d) => result.debtPayoffMonth[d.id] !== undefined)
     .sort((a, b) => result.debtPayoffMonth[a.id] - result.debtPayoffMonth[b.id])
+
+  async function handleDownload() {
+    setDownloading(true)
+    try {
+      await downloadPayoffReportPdf({ debts, result, strategy, currency, locale, t })
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -66,14 +81,24 @@ export default function Milestones({ debts, result, originalTotal, t, onCelebrat
         </div>
       )}
 
-      {result.feasible && result.months > 0 && (
+      <div className="mt-6 flex flex-wrap gap-2">
+        {result.feasible && result.months > 0 && (
+          <button
+            onClick={onCelebrate}
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+          >
+            <PartyPopper size={16} /> {t.milestones.celebrate}
+          </button>
+        )}
         <button
-          onClick={onCelebrate}
-          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+          onClick={handleDownload}
+          disabled={downloading}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-800 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white"
         >
-          <PartyPopper size={16} /> {t.milestones.celebrate}
+          {downloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+          {downloading ? t.report.generating : t.report.downloadButton}
         </button>
-      )}
+      </div>
     </section>
   )
 }

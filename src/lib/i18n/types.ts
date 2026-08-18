@@ -39,6 +39,8 @@ export interface Translation {
     apr: string
     minPayment: string
     category: string
+    dueDay: string
+    dueDayHint: string
     addNamePlaceholder: string
     addDebt: string
     cancel: string
@@ -53,12 +55,37 @@ export interface Translation {
     avalancheDesc: string
     snowballTitle: string
     snowballDesc: string
+    customTitle: string
+    customDesc: string
     saves: (amount: string) => string
     debtFreeIn: string
     interestPaid: string
     tooLow: string
   }
   strategyName: Record<Strategy, string>
+  priority: {
+    heading: string
+    subheading: string
+    moveUp: (name: string) => string
+    moveDown: (name: string) => string
+  }
+  reminders: {
+    heading: string
+    dueToday: string
+    dueInDays: (n: number) => string
+    none: string
+  }
+  report: {
+    downloadButton: string
+    generating: string
+    title: string
+    generatedOn: (date: string) => string
+    strategyUsed: (strategy: string) => string
+    debtsHeading: string
+    payoffOrderHeading: string
+    disclaimer: string
+    dueDayColumn: string
+  }
   summary: {
     debtFreeDate: string
     fromNow: (time: string) => string
@@ -124,9 +151,5 @@ export interface Translation {
     confirmEmailSent: (email: string) => string
     syncing: string
     synced: string
-    importPromptTitle: string
-    importPromptBody: string
-    importYes: string
-    importNo: string
   }
 }

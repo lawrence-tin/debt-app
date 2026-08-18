@@ -22,7 +22,7 @@ interface Props {
   onLoadSample: () => void
 }
 
-const emptyDraft = { name: '', category: 'credit-card' as DebtCategory, balance: '', apr: '', minPayment: '' }
+const emptyDraft = { name: '', category: 'credit-card' as DebtCategory, balance: '', apr: '', minPayment: '', dueDay: '' }
 
 export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoadSample }: Props) {
   const symbol = getCurrencySymbol(currency)
@@ -41,10 +41,19 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
     const balance = Number(draft.balance)
     const apr = Number(draft.apr)
     const minPayment = Number(draft.minPayment)
+    const dueDay = Number(draft.dueDay)
     if (!draft.name || !(balance > 0) || !(minPayment > 0)) return
     onChange([
       ...debts,
-      { id: makeId(), name: draft.name, category: draft.category, balance, apr: apr || 0, minPayment },
+      {
+        id: makeId(),
+        name: draft.name,
+        category: draft.category,
+        balance,
+        apr: apr || 0,
+        minPayment,
+        dueDay: dueDay >= 1 && dueDay <= 31 ? dueDay : undefined,
+      },
     ])
     setDraft(emptyDraft)
   }
@@ -129,7 +138,21 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
                     />
                   </div>
                 </label>
-                <label className="text-xs text-slate-500 dark:text-slate-400">
+                <label className="text-xs text-slate-500 dark:text-slate-400" title={t.debts.dueDayHint}>
+                  {t.debts.dueDay}
+                  <input
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={d.dueDay ?? ''}
+                    onChange={(e) => {
+                      const v = Number(e.target.value)
+                      updateDebt(d.id, { dueDay: v >= 1 && v <= 31 ? v : undefined })
+                    }}
+                    className="mt-0.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  />
+                </label>
+                <label className="col-span-2 text-xs text-slate-500 dark:text-slate-400">
                   {t.debts.category}
                   <select
                     value={d.category}
@@ -204,6 +227,16 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
                 className="w-full bg-transparent py-1.5 text-sm text-slate-900 outline-none dark:text-white"
               />
             </div>
+            <input
+              type="number"
+              min={1}
+              max={31}
+              placeholder={t.debts.dueDay}
+              title={t.debts.dueDayHint}
+              value={draft.dueDay}
+              onChange={(e) => setDraft({ ...draft, dueDay: e.target.value })}
+              className="col-span-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+            />
           </div>
           <div className="mt-3 flex gap-2">
             <button

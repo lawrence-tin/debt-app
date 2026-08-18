@@ -13,9 +13,13 @@ create table if not exists public.debts (
   balance numeric not null default 0,
   apr numeric not null default 0,
   min_payment numeric not null default 0,
+  due_day smallint,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Existing installs: add columns introduced after the initial release.
+alter table public.debts add column if not exists due_day smallint;
 
 create index if not exists debts_user_id_idx on public.debts (user_id);
 
@@ -26,11 +30,14 @@ create table if not exists public.settings (
   fixed_expenses numeric not null default 0,
   extra_payment numeric not null default 0,
   strategy text not null default 'avalanche',
+  priority_order jsonb not null default '[]'::jsonb,
   currency text not null default 'USD',
   language text not null default 'en',
   theme text not null default 'light',
   updated_at timestamptz not null default now()
 );
+
+alter table public.settings add column if not exists priority_order jsonb not null default '[]'::jsonb;
 
 alter table public.debts enable row level security;
 alter table public.settings enable row level security;
@@ -63,3 +70,7 @@ create policy "settings_insert_own" on public.settings
 drop policy if exists "settings_update_own" on public.settings;
 create policy "settings_update_own" on public.settings
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "settings_delete_own" on public.settings;
+create policy "settings_delete_own" on public.settings
+  for delete using (auth.uid() = user_id);

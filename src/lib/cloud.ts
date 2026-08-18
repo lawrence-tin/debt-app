@@ -7,6 +7,7 @@ export interface CloudSettings {
   fixedExpenses: number
   extraPayment: number
   strategy: Strategy
+  priorityOrder: string[]
   currency: string
   language: Locale
   theme: 'light' | 'dark'
@@ -19,6 +20,7 @@ interface DebtRow {
   balance: number
   apr: number
   min_payment: number
+  due_day: number | null
 }
 
 interface SettingsRow {
@@ -26,13 +28,35 @@ interface SettingsRow {
   fixed_expenses: number
   extra_payment: number
   strategy: Strategy
+  priority_order: string[] | null
   currency: string
   language: Locale
   theme: 'light' | 'dark'
 }
 
 function rowToDebt(row: DebtRow): Debt {
-  return { id: row.id, name: row.name, category: row.category, balance: row.balance, apr: row.apr, minPayment: row.min_payment }
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    balance: row.balance,
+    apr: row.apr,
+    minPayment: row.min_payment,
+    dueDay: row.due_day ?? undefined,
+  }
+}
+
+function debtToRow(userId: string, debt: Debt) {
+  return {
+    id: debt.id,
+    user_id: userId,
+    name: debt.name,
+    category: debt.category,
+    balance: debt.balance,
+    apr: debt.apr,
+    min_payment: debt.minPayment,
+    due_day: debt.dueDay ?? null,
+  }
 }
 
 export async function fetchCloudDebts(userId: string): Promise<Debt[]> {
@@ -53,6 +77,7 @@ export async function fetchCloudSettings(userId: string): Promise<CloudSettings 
     fixedExpenses: row.fixed_expenses,
     extraPayment: row.extra_payment,
     strategy: row.strategy,
+    priorityOrder: row.priority_order ?? [],
     currency: row.currency,
     language: row.language,
     theme: row.theme,
@@ -61,15 +86,10 @@ export async function fetchCloudSettings(userId: string): Promise<CloudSettings 
 
 export async function insertDebtRemote(userId: string, debt: Debt): Promise<void> {
   if (!supabase) return
-  const { error } = await supabase.from('debts').insert({
-    id: debt.id,
-    user_id: userId,
-    name: debt.name,
-    category: debt.category,
-    balance: debt.balance,
-    apr: debt.apr,
-    min_payment: debt.minPayment,
-  })
+  // Upsert rather than insert: if the same debt is pushed twice concurrently (e.g. the
+  // confirmation link opened in a second tab, racing the original tab's initial sync via
+  // Supabase's cross-tab auth sync), this is a harmless no-op instead of a conflict error.
+  const { error } = await supabase.from('debts').upsert(debtToRow(userId, debt), { onConflict: 'id' })
   if (error) throw error
 }
 
@@ -83,6 +103,7 @@ export async function updateDebtRemote(userId: string, debt: Debt): Promise<void
       balance: debt.balance,
       apr: debt.apr,
       min_payment: debt.minPayment,
+      due_day: debt.dueDay ?? null,
       updated_at: new Date().toISOString(),
     })
     .eq('id', debt.id)
@@ -93,24 +114,6 @@ export async function updateDebtRemote(userId: string, debt: Debt): Promise<void
 export async function deleteDebtRemote(userId: string, debtId: string): Promise<void> {
   if (!supabase) return
   const { error } = await supabase.from('debts').delete().eq('id', debtId).eq('user_id', userId)
-  if (error) throw error
-}
-
-export async function replaceAllDebtsRemote(userId: string, debts: Debt[]): Promise<void> {
-  if (!supabase) return
-  await supabase.from('debts').delete().eq('user_id', userId)
-  if (debts.length === 0) return
-  const { error } = await supabase.from('debts').insert(
-    debts.map((d) => ({
-      id: d.id,
-      user_id: userId,
-      name: d.name,
-      category: d.category,
-      balance: d.balance,
-      apr: d.apr,
-      min_payment: d.minPayment,
-    })),
-  )
   if (error) throw error
 }
 
@@ -129,7 +132,8 @@ export async function syncDebtsDiff(userId: string, before: Debt[], after: Debt[
       prev.category !== d.category ||
       prev.balance !== d.balance ||
       prev.apr !== d.apr ||
-      prev.minPayment !== d.minPayment
+      prev.minPayment !== d.minPayment ||
+      prev.dueDay !== d.dueDay
     ) {
       ops.push(updateDebtRemote(userId, d))
     }
@@ -148,6 +152,7 @@ export async function upsertSettingsRemote(userId: string, settings: CloudSettin
     fixed_expenses: settings.fixedExpenses,
     extra_payment: settings.extraPayment,
     strategy: settings.strategy,
+    priority_order: settings.priorityOrder,
     currency: settings.currency,
     language: settings.language,
     theme: settings.theme,

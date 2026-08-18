@@ -7,6 +7,8 @@ export interface AppState {
   fixedExpenses: number
   extraPayment: number
   strategy: Strategy
+  /** Debt ids in user-chosen payoff order, used when strategy === 'custom'. */
+  priorityOrder: string[]
   theme: 'light' | 'dark'
   currency: string
   language: Locale
@@ -33,8 +35,8 @@ export function saveState(state: AppState) {
 }
 
 export const SAMPLE_DEBTS: Debt[] = [
-  { id: 'sample-1', name: 'Visa Card', category: 'credit-card', balance: 4200, apr: 24.99, minPayment: 120 },
-  { id: 'sample-2', name: 'Student Loan', category: 'student-loan', balance: 18500, apr: 5.5, minPayment: 210 },
-  { id: 'sample-3', name: 'Car Loan', category: 'auto-loan', balance: 9800, apr: 7.2, minPayment: 260 },
-  { id: 'sample-4', name: 'Store Card', category: 'credit-card', balance: 1150, apr: 27.99, minPayment: 45 },
+  { id: 'sample-1', name: 'Visa Card', category: 'credit-card', balance: 4200, apr: 24.99, minPayment: 120, dueDay: 5 },
+  { id: 'sample-2', name: 'Student Loan', category: 'student-loan', balance: 18500, apr: 5.5, minPayment: 210, dueDay: 15 },
+  { id: 'sample-3', name: 'Car Loan', category: 'auto-loan', balance: 9800, apr: 7.2, minPayment: 260, dueDay: 1 },
+  { id: 'sample-4', name: 'Store Card', category: 'credit-card', balance: 1150, apr: 27.99, minPayment: 45, dueDay: 22 },
 ]

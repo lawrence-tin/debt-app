@@ -13,9 +13,11 @@ export interface Debt {
   balance: number
   apr: number // annual percentage rate, e.g. 22.99
   minPayment: number
+  /** Day of the month (1-31) the payment is due. Optional — powers reminders. */
+  dueDay?: number
 }
 
-export type Strategy = 'avalanche' | 'snowball'
+export type Strategy = 'avalanche' | 'snowball' | 'custom'
 
 export interface MonthSnapshot {
   month: number
@@ -38,8 +40,14 @@ export interface PayoffResult {
 
 const MAX_MONTHS = 600 // 50-year safety cap
 
-function getOrder(debts: Debt[], strategy: Strategy): string[] {
+function getOrder(debts: Debt[], strategy: Strategy, customOrder: string[] = []): string[] {
   const active = debts.filter((d) => d.balance > 0)
+  if (strategy === 'custom') {
+    const activeIds = new Set(active.map((d) => d.id))
+    const ranked = customOrder.filter((id) => activeIds.has(id))
+    const unranked = active.filter((d) => !customOrder.includes(d.id)).map((d) => d.id)
+    return [...ranked, ...unranked]
+  }
   const sorted =
     strategy === 'avalanche'
       ? [...active].sort((a, b) => b.apr - a.apr || a.balance - b.balance)
@@ -68,8 +76,9 @@ export function simulatePayoff(
   strategy: Strategy,
   monthlyBudget: number,
   startDate: Date = new Date(),
+  customOrder: string[] = [],
 ): PayoffResult {
-  const order = getOrder(debts, strategy)
+  const order = getOrder(debts, strategy, customOrder)
   const minRequired = totalMinPayment(debts)
   const feasible = debts.length === 0 || monthlyBudget >= minRequired - 0.01
 
