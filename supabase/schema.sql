@@ -34,13 +34,46 @@ create table if not exists public.settings (
   currency text not null default 'USD',
   language text not null default 'en',
   theme text not null default 'light',
+  tried_strategies jsonb not null default '[]'::jsonb,
+  has_downloaded_report boolean not null default false,
   updated_at timestamptz not null default now()
 );
 
 alter table public.settings add column if not exists priority_order jsonb not null default '[]'::jsonb;
+alter table public.settings add column if not exists tried_strategies jsonb not null default '[]'::jsonb;
+alter table public.settings add column if not exists has_downloaded_report boolean not null default false;
+
+-- One row per payment logged against a debt's recurring due date.
+create table if not exists public.payments (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  debt_id uuid not null references public.debts(id) on delete cascade,
+  -- Billing period this payment covers, as 'YYYY-MM'.
+  period text not null,
+  paid_at timestamptz not null default now(),
+  unique (debt_id, period)
+);
+
+create index if not exists payments_user_id_idx on public.payments (user_id);
+create index if not exists payments_debt_id_idx on public.payments (debt_id);
+
+-- One row per saved "what if" scenario.
+create table if not exists public.scenarios (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  extra_payment numeric not null default 0,
+  strategy text not null default 'avalanche',
+  priority_order jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists scenarios_user_id_idx on public.scenarios (user_id);
 
 alter table public.debts enable row level security;
 alter table public.settings enable row level security;
+alter table public.payments enable row level security;
+alter table public.scenarios enable row level security;
 
 -- Each user may only see/change their own rows.
 drop policy if exists "debts_select_own" on public.debts;
@@ -73,4 +106,32 @@ create policy "settings_update_own" on public.settings
 
 drop policy if exists "settings_delete_own" on public.settings;
 create policy "settings_delete_own" on public.settings
+  for delete using (auth.uid() = user_id);
+
+drop policy if exists "payments_select_own" on public.payments;
+create policy "payments_select_own" on public.payments
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "payments_insert_own" on public.payments;
+create policy "payments_insert_own" on public.payments
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "payments_delete_own" on public.payments;
+create policy "payments_delete_own" on public.payments
+  for delete using (auth.uid() = user_id);
+
+drop policy if exists "scenarios_select_own" on public.scenarios;
+create policy "scenarios_select_own" on public.scenarios
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "scenarios_insert_own" on public.scenarios;
+create policy "scenarios_insert_own" on public.scenarios
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "scenarios_update_own" on public.scenarios;
+create policy "scenarios_update_own" on public.scenarios
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "scenarios_delete_own" on public.scenarios;
+create policy "scenarios_delete_own" on public.scenarios
   for delete using (auth.uid() = user_id);

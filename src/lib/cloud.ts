@@ -1,6 +1,8 @@
 import { supabase } from './supabase'
 import type { Debt, DebtCategory, Strategy } from './payoff'
 import type { Locale } from './i18n'
+import type { Payment } from './reminders'
+import type { Scenario } from './scenarios'
 
 export interface CloudSettings {
   monthlyIncome: number
@@ -11,6 +13,8 @@ export interface CloudSettings {
   currency: string
   language: Locale
   theme: 'light' | 'dark'
+  triedStrategies: Strategy[]
+  hasDownloadedReport: boolean
 }
 
 interface DebtRow {
@@ -32,6 +36,24 @@ interface SettingsRow {
   currency: string
   language: Locale
   theme: 'light' | 'dark'
+  tried_strategies: Strategy[] | null
+  has_downloaded_report: boolean | null
+}
+
+interface PaymentRow {
+  id: string
+  debt_id: string
+  period: string
+  paid_at: string
+}
+
+interface ScenarioRow {
+  id: string
+  name: string
+  extra_payment: number
+  strategy: Strategy
+  priority_order: string[] | null
+  created_at: string
 }
 
 function rowToDebt(row: DebtRow): Debt {
@@ -59,6 +81,17 @@ function debtToRow(userId: string, debt: Debt) {
   }
 }
 
+function rowToScenario(row: ScenarioRow): Scenario {
+  return {
+    id: row.id,
+    name: row.name,
+    extraPayment: row.extra_payment,
+    strategy: row.strategy,
+    priorityOrder: row.priority_order ?? [],
+    createdAt: row.created_at,
+  }
+}
+
 export async function fetchCloudDebts(userId: string): Promise<Debt[]> {
   if (!supabase) return []
   const { data, error } = await supabase.from('debts').select('*').eq('user_id', userId).order('created_at')
@@ -81,6 +114,8 @@ export async function fetchCloudSettings(userId: string): Promise<CloudSettings 
     currency: row.currency,
     language: row.language,
     theme: row.theme,
+    triedStrategies: row.tried_strategies ?? [],
+    hasDownloadedReport: row.has_downloaded_report ?? false,
   }
 }
 
@@ -156,7 +191,67 @@ export async function upsertSettingsRemote(userId: string, settings: CloudSettin
     currency: settings.currency,
     language: settings.language,
     theme: settings.theme,
+    tried_strategies: settings.triedStrategies,
+    has_downloaded_report: settings.hasDownloadedReport,
     updated_at: new Date().toISOString(),
   })
+  if (error) throw error
+}
+
+// --- Payments ---
+
+export async function fetchCloudPayments(userId: string): Promise<Payment[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase.from('payments').select('*').eq('user_id', userId)
+  if (error) throw error
+  return (data as PaymentRow[]).map((row) => ({ id: row.id, debtId: row.debt_id, period: row.period, paidAt: row.paid_at }))
+}
+
+export async function insertPaymentRemote(userId: string, payment: Payment): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase
+    .from('payments')
+    .upsert(
+      { id: payment.id, user_id: userId, debt_id: payment.debtId, period: payment.period, paid_at: payment.paidAt },
+      { onConflict: 'id' },
+    )
+  if (error) throw error
+}
+
+export async function deletePaymentRemote(userId: string, paymentId: string): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase.from('payments').delete().eq('id', paymentId).eq('user_id', userId)
+  if (error) throw error
+}
+
+// --- Scenarios ---
+
+export async function fetchCloudScenarios(userId: string): Promise<Scenario[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase.from('scenarios').select('*').eq('user_id', userId).order('created_at')
+  if (error) throw error
+  return (data as ScenarioRow[]).map(rowToScenario)
+}
+
+export async function insertScenarioRemote(userId: string, scenario: Scenario): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase.from('scenarios').upsert(
+    {
+      id: scenario.id,
+      user_id: userId,
+      name: scenario.name,
+      extra_payment: scenario.extraPayment,
+      strategy: scenario.strategy,
+      priority_order: scenario.priorityOrder,
+      created_at: scenario.createdAt,
+    },
+    { onConflict: 'id' },
+  )
+  if (error) throw error
+}
+
+export async function deleteScenarioRemote(userId: string, scenarioId: string): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase.from('scenarios').delete().eq('id', scenarioId).eq('user_id', userId)
   if (error) throw error
 }

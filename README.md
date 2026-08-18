@@ -21,8 +21,15 @@ to your own account (backed by Supabase) so they follow you across devices.
 - Balance-over-time chart (Recharts) comparing all three strategies at once
 - Milestone checkpoints (25% / 50% / 75% / 100% paid off) and a payoff
   order timeline
-- Optional due day per debt, with an upcoming-payments reminder panel
-- One-click PDF report of your full payoff plan
+- Optional due day per debt, with an upcoming-payments reminder panel —
+  mark payments as paid and overdue ones are flagged for real
+- A monthly payment calendar view of every due date
+- **What-if scenarios** — save different budgets/strategies and compare
+  them side by side, then apply one back to your live plan any time
+- Achievement badges for milestones like your first payment, trying every
+  strategy, or paying off a debt entirely
+- One-click PDF report of your full payoff plan, plus a CSV export of your
+  debts that opens directly in Excel/Sheets
 - Every currency (160 ISO codes, with flags) and three languages (English,
   Español, Français)
 - Light/dark theme toggle
@@ -60,8 +67,8 @@ browser — no custom backend server required.
 1. Create a free project at [supabase.com](https://supabase.com).
 2. In the Supabase dashboard, open **SQL Editor → New query**, paste the
    contents of [`supabase/schema.sql`](supabase/schema.sql), and run it.
-   This creates the `debts` and `settings` tables with row-level security
-   so each user can only ever see their own data.
+   This creates the `debts`, `settings`, `payments`, and `scenarios` tables
+   with row-level security so each user can only ever see their own data.
 3. In **Project Settings → API**, copy the **Project URL** and the
    **`anon` `public`** key (never the `service_role` key).
 4. Copy `.env.example` to `.env.local` and fill in those two values:

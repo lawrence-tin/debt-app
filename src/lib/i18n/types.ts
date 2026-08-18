@@ -73,10 +73,15 @@ export interface Translation {
     heading: string
     dueToday: string
     dueInDays: (n: number) => string
+    overdueBy: (n: number) => string
     none: string
+    markPaid: string
+    paidBadge: string
+    undoPaid: string
   }
   report: {
     downloadButton: string
+    csvDownloadButton: string
     generating: string
     title: string
     generatedOn: (date: string) => string
@@ -85,6 +90,51 @@ export interface Translation {
     payoffOrderHeading: string
     disclaimer: string
     dueDayColumn: string
+  }
+  scenarios: {
+    heading: string
+    subheading: string
+    saveCurrent: string
+    namePlaceholder: string
+    save: string
+    cancel: string
+    apply: string
+    delete: string
+    empty: string
+    extraLabel: (amount: string) => string
+    strategyLabel: (strategy: string) => string
+  }
+  achievements: {
+    heading: string
+    subheading: string
+    unlocked: (n: number, total: number) => string
+    firstDebtTitle: string
+    firstDebtDesc: string
+    budgetSetTitle: string
+    budgetSetDesc: string
+    allStrategiesTitle: string
+    allStrategiesDesc: string
+    firstPaymentTitle: string
+    firstPaymentDesc: string
+    committedTitle: string
+    committedDesc: string
+    debtPaidOffTitle: string
+    debtPaidOffDesc: string
+    explorerTitle: string
+    explorerDesc: string
+    reporterTitle: string
+    reporterDesc: string
+    cloudSyncedTitle: string
+    cloudSyncedDesc: string
+    scenarioBuilderTitle: string
+    scenarioBuilderDesc: string
+  }
+  calendar: {
+    heading: string
+    todayLabel: string
+    prevMonth: string
+    nextMonth: string
+    weekdays: [string, string, string, string, string, string, string]
   }
   summary: {
     debtFreeDate: string

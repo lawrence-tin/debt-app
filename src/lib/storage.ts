@@ -1,5 +1,7 @@
 import type { Debt, Strategy } from './payoff'
 import type { Locale } from './i18n'
+import type { Payment } from './reminders'
+import type { Scenario } from './scenarios'
 
 export interface AppState {
   debts: Debt[]
@@ -12,6 +14,14 @@ export interface AppState {
   theme: 'light' | 'dark'
   currency: string
   language: Locale
+  payments: Payment[]
+  scenarios: Scenario[]
+  /** Achievement-tracking signals. */
+  triedStrategies: Strategy[]
+  hasDownloadedReport: boolean
+  debtsPaidOffCount: number
+  hasEditedBudget: boolean
+  hasExplored: boolean
 }
 
 const KEY = 'clearpath.v1'

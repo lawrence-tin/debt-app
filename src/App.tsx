@@ -4,8 +4,11 @@ import BudgetPanel from './components/BudgetPanel'
 import DebtsPanel from './components/DebtsPanel'
 import StrategyPicker from './components/StrategyPicker'
 import PriorityList from './components/PriorityList'
+import ScenarioManager from './components/ScenarioManager'
 import SummaryCards from './components/SummaryCards'
 import Reminders from './components/Reminders'
+import PayoffCalendar from './components/PayoffCalendar'
+import AchievementBadges from './components/AchievementBadges'
 import Milestones from './components/Milestones'
 import CurrencySelector from './components/CurrencySelector'
 import LanguageSelector from './components/LanguageSelector'
@@ -21,7 +24,22 @@ import { guessCurrencyFromLocale } from './lib/currencies'
 import { guessLocaleFromBrowser, LANGUAGE_META, TRANSLATIONS, type Locale } from './lib/i18n'
 import { isCloudConfigured } from './lib/supabase'
 import { signOut as authSignOut, useAuth } from './lib/useAuth'
-import { fetchCloudDebts, fetchCloudSettings, syncDebtsDiff, upsertSettingsRemote, type CloudSettings } from './lib/cloud'
+import type { Payment } from './lib/reminders'
+import type { Scenario } from './lib/scenarios'
+import type { AchievementSignals } from './lib/achievements'
+import {
+  deletePaymentRemote,
+  deleteScenarioRemote,
+  fetchCloudDebts,
+  fetchCloudPayments,
+  fetchCloudScenarios,
+  fetchCloudSettings,
+  insertPaymentRemote,
+  insertScenarioRemote,
+  syncDebtsDiff,
+  upsertSettingsRemote,
+  type CloudSettings,
+} from './lib/cloud'
 
 const DEFAULTS = {
   debts: [] as Debt[],
@@ -63,6 +81,14 @@ export default function App() {
   const [language, setLanguage] = useState<Locale>(saved?.language ?? guessLocaleFromBrowser())
   const [confettiTrigger, setConfettiTrigger] = useState(0)
 
+  const [payments, setPayments] = useState<Payment[]>(saved?.payments ?? [])
+  const [scenarios, setScenarios] = useState<Scenario[]>(saved?.scenarios ?? [])
+  const [triedStrategies, setTriedStrategies] = useState<Strategy[]>(saved?.triedStrategies ?? [strategy])
+  const [hasDownloadedReport, setHasDownloadedReport] = useState(saved?.hasDownloadedReport ?? false)
+  const [debtsPaidOffCount, setDebtsPaidOffCount] = useState(saved?.debtsPaidOffCount ?? 0)
+  const [hasEditedBudget, setHasEditedBudget] = useState(saved?.hasEditedBudget ?? false)
+  const [hasExplored, setHasExplored] = useState(saved?.hasExplored ?? false)
+
   const { user } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle')
@@ -93,11 +119,46 @@ export default function App() {
       theme,
       currency,
       language,
+      payments,
+      scenarios,
+      triedStrategies,
+      hasDownloadedReport,
+      debtsPaidOffCount,
+      hasEditedBudget,
+      hasExplored,
     })
-  }, [debts, monthlyIncome, fixedExpenses, extraPayment, strategy, priorityOrder, theme, currency, language])
+  }, [
+    debts,
+    monthlyIncome,
+    fixedExpenses,
+    extraPayment,
+    strategy,
+    priorityOrder,
+    theme,
+    currency,
+    language,
+    payments,
+    scenarios,
+    triedStrategies,
+    hasDownloadedReport,
+    debtsPaidOffCount,
+    hasEditedBudget,
+    hasExplored,
+  ])
 
   function currentSettings(): CloudSettings {
-    return { monthlyIncome, fixedExpenses, extraPayment, strategy, priorityOrder, currency, language, theme }
+    return {
+      monthlyIncome,
+      fixedExpenses,
+      extraPayment,
+      strategy,
+      priorityOrder,
+      currency,
+      language,
+      theme,
+      triedStrategies,
+      hasDownloadedReport,
+    }
   }
 
   // On sign-in: pull the account's cloud data down, or — for a brand-new account — push
@@ -115,12 +176,19 @@ export default function App() {
     setSyncStatus('syncing')
     ;(async () => {
       try {
-        const [cloudDebts, cloudSettings] = await Promise.all([fetchCloudDebts(user.id), fetchCloudSettings(user.id)])
+        const [cloudDebts, cloudSettings, cloudPayments, cloudScenarios] = await Promise.all([
+          fetchCloudDebts(user.id),
+          fetchCloudSettings(user.id),
+          fetchCloudPayments(user.id),
+          fetchCloudScenarios(user.id),
+        ])
         if (cancelled) return
 
         if (cloudDebts.length > 0 || cloudSettings) {
           setDebts(cloudDebts)
           cloudDebtsRef.current = cloudDebts
+          setPayments(cloudPayments)
+          setScenarios(cloudScenarios)
           if (cloudSettings) {
             setMonthlyIncome(cloudSettings.monthlyIncome)
             setFixedExpenses(cloudSettings.fixedExpenses)
@@ -130,11 +198,15 @@ export default function App() {
             setCurrency(cloudSettings.currency)
             setLanguage(cloudSettings.language)
             setTheme(cloudSettings.theme)
+            setTriedStrategies(cloudSettings.triedStrategies.length > 0 ? cloudSettings.triedStrategies : [strategy])
+            setHasDownloadedReport(cloudSettings.hasDownloadedReport)
           }
         } else {
           // Fresh account: adopt whatever is currently in this browser as the starting point.
           await syncDebtsDiff(user.id, [], debts)
           await upsertSettingsRemote(user.id, currentSettings())
+          await Promise.all(payments.map((p) => insertPaymentRemote(user.id, p)))
+          await Promise.all(scenarios.map((s) => insertScenarioRemote(user.id, s)))
           cloudDebtsRef.current = debts
         }
         setSyncStatus('synced')
@@ -162,7 +234,19 @@ export default function App() {
     }, 700)
     return () => clearTimeout(timeout)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, monthlyIncome, fixedExpenses, extraPayment, strategy, priorityOrder, currency, language, theme])
+  }, [
+    user,
+    monthlyIncome,
+    fixedExpenses,
+    extraPayment,
+    strategy,
+    priorityOrder,
+    currency,
+    language,
+    theme,
+    triedStrategies,
+    hasDownloadedReport,
+  ])
 
   const minPayment = totalMinPayment(debts)
   const originalTotal = totalBalance(debts)
@@ -182,6 +266,9 @@ export default function App() {
   const selected = results[strategy]
 
   function handleDebtsChange(next: Debt[]) {
+    const removedPaidOff = debts.filter((d) => d.balance > 0 && !next.some((n) => n.id === d.id)).length
+    if (removedPaidOff > 0) setDebtsPaidOffCount((n) => n + removedPaidOff)
+
     setDebts(next)
     setPriorityOrder((order) => reconcilePriorityOrder(order, next))
     if (user && !hydratingRef.current) {
@@ -192,6 +279,50 @@ export default function App() {
         .then(() => setSyncStatus('synced'))
         .catch(() => setSyncStatus('idle'))
     }
+  }
+
+  function handleSelectStrategy(next: Strategy) {
+    setStrategy(next)
+    setTriedStrategies((prev) => (prev.includes(next) ? prev : [...prev, next]))
+  }
+
+  function handleBudgetChange(patch: Partial<{ monthlyIncome: number; fixedExpenses: number; extraPayment: number }>) {
+    if (patch.monthlyIncome !== undefined) setMonthlyIncome(patch.monthlyIncome)
+    if (patch.fixedExpenses !== undefined) setFixedExpenses(patch.fixedExpenses)
+    if (patch.extraPayment !== undefined) setExtraPayment(patch.extraPayment)
+    setHasEditedBudget(true)
+  }
+
+  function handleCurrencyChange(next: string) {
+    setCurrency(next)
+    setHasExplored(true)
+  }
+
+  function handleLanguageChange(next: Locale) {
+    setLanguage(next)
+    setHasExplored(true)
+  }
+
+  function handleMarkPaid(debtId: string, period: string) {
+    const payment: Payment = { id: makeId(), debtId, period, paidAt: new Date().toISOString() }
+    setPayments((prev) => [...prev, payment])
+    if (user) insertPaymentRemote(user.id, payment).catch(() => {})
+  }
+
+  function handleSaveScenario(scenario: Scenario) {
+    setScenarios((prev) => [...prev, scenario])
+    if (user) insertScenarioRemote(user.id, scenario).catch(() => {})
+  }
+
+  function handleApplyScenario(scenario: Scenario) {
+    setExtraPayment(scenario.extraPayment)
+    handleSelectStrategy(scenario.strategy)
+    setPriorityOrder(reconcilePriorityOrder(scenario.priorityOrder, debts))
+  }
+
+  function handleDeleteScenario(id: string) {
+    setScenarios((prev) => prev.filter((s) => s.id !== id))
+    if (user) deleteScenarioRemote(user.id, id).catch(() => {})
   }
 
   async function handleSignOut() {
@@ -208,6 +339,20 @@ export default function App() {
     setExtraPayment(DEFAULTS.extraPayment)
     setStrategy(DEFAULTS.strategy)
     setPriorityOrder([])
+    for (const p of payments) if (user) deletePaymentRemote(user.id, p.id).catch(() => {})
+    setPayments([])
+  }
+
+  const achievementSignals: AchievementSignals = {
+    debtCount: debts.length,
+    hasEditedBudget,
+    triedStrategies,
+    paymentCount: payments.length,
+    debtsPaidOffCount,
+    hasExplored,
+    hasDownloadedReport,
+    isSignedIn: Boolean(user),
+    scenarioCount: scenarios.length,
   }
 
   return (
@@ -224,8 +369,8 @@ export default function App() {
             <span className="text-lg font-semibold tracking-tight">ClearPath</span>
           </div>
           <div className="flex items-center gap-2">
-            <LanguageSelector value={language} onChange={setLanguage} t={t} />
-            <CurrencySelector value={currency} onChange={setCurrency} t={t} compact />
+            <LanguageSelector value={language} onChange={handleLanguageChange} t={t} />
+            <CurrencySelector value={currency} onChange={handleCurrencyChange} t={t} compact />
             <button
               onClick={resetAll}
               className="hidden items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-700 sm:inline-flex dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
@@ -252,6 +397,10 @@ export default function App() {
           <p className="mt-2 max-w-2xl text-slate-500 dark:text-slate-400">{t.app.subtitle}</p>
         </div>
 
+        <div className="mb-6">
+          <AchievementBadges signals={achievementSignals} t={t} />
+        </div>
+
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="space-y-6 lg:col-span-2">
             <BudgetPanel
@@ -262,11 +411,7 @@ export default function App() {
               currency={currency}
               locale={dateLocale}
               t={t}
-              onChange={(patch) => {
-                if (patch.monthlyIncome !== undefined) setMonthlyIncome(patch.monthlyIncome)
-                if (patch.fixedExpenses !== undefined) setFixedExpenses(patch.fixedExpenses)
-                if (patch.extraPayment !== undefined) setExtraPayment(patch.extraPayment)
-              }}
+              onChange={handleBudgetChange}
             />
             <DebtsPanel
               debts={debts}
@@ -276,7 +421,8 @@ export default function App() {
               onChange={handleDebtsChange}
               onLoadSample={() => handleDebtsChange(SAMPLE_DEBTS.map((d) => ({ ...d, id: makeId() })))}
             />
-            <Reminders debts={debts} t={t} />
+            <Reminders debts={debts} payments={payments} t={t} onMarkPaid={handleMarkPaid} />
+            {debts.some((d) => d.dueDay) && <PayoffCalendar debts={debts} t={t} locale={dateLocale} />}
           </div>
 
           <div className="space-y-6 lg:col-span-3">
@@ -284,7 +430,7 @@ export default function App() {
               <>
                 <StrategyPicker
                   strategy={strategy}
-                  onSelect={setStrategy}
+                  onSelect={handleSelectStrategy}
                   avalanche={avalanche}
                   snowball={snowball}
                   custom={custom}
@@ -295,6 +441,19 @@ export default function App() {
                 {strategy === 'custom' && (
                   <PriorityList debts={debts} order={custom.order} onReorder={setPriorityOrder} t={t} />
                 )}
+                <ScenarioManager
+                  debts={debts}
+                  scenarios={scenarios}
+                  currentExtraPayment={extraPayment}
+                  currentStrategy={strategy}
+                  currentPriorityOrder={priorityOrder}
+                  currency={currency}
+                  locale={dateLocale}
+                  t={t}
+                  onSave={handleSaveScenario}
+                  onApply={handleApplyScenario}
+                  onDelete={handleDeleteScenario}
+                />
                 <SummaryCards result={selected} baseline={baseline} currency={currency} locale={dateLocale} t={t} />
                 <Suspense
                   fallback={
@@ -322,6 +481,7 @@ export default function App() {
                   locale={dateLocale}
                   t={t}
                   onCelebrate={() => setConfettiTrigger((n) => n + 1)}
+                  onExport={() => setHasDownloadedReport(true)}
                 />
               </>
             ) : (
