@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { BookOpen, RotateCcw, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import BudgetPanel from './components/BudgetPanel'
 import DebtsPanel from './components/DebtsPanel'
 import StrategyPicker from './components/StrategyPicker'
@@ -21,7 +21,7 @@ import CurrencySelector from './components/CurrencySelector'
 import LanguageSelector from './components/LanguageSelector'
 import AccountMenu from './components/AccountMenu'
 import AuthModal from './components/AuthModal'
-import PrivacyBadge from './components/PrivacyBadge'
+import MoreMenu from './components/MoreMenu'
 import EducationCenter from './components/EducationCenter'
 import PricingModal from './components/PricingModal'
 
@@ -465,26 +465,12 @@ export default function App() {
             <LanguageSelector value={language} onChange={handleLanguageChange} t={t} />
             <CurrencySelector value={currency} onChange={handleCurrencyChange} t={t} compact />
             <button
-              onClick={() => setShowEducation(true)}
-              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-            >
-              <BookOpen size={13} /> <span className="hidden sm:inline">{t.education.openLabel}</span>
-            </button>
-            <button
               onClick={() => setShowPricing(true)}
               className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/20"
             >
               <Sparkles size={13} /> {t.plus.badge}
             </button>
-            <PrivacyBadge t={t} />
-            {!showOnboarding && (
-              <button
-                onClick={resetAll}
-                className="hidden items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-700 sm:inline-flex dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-              >
-                <RotateCcw size={13} /> {t.app.startOver}
-              </button>
-            )}
+            <MoreMenu t={t} onLearn={() => setShowEducation(true)} onStartOver={showOnboarding ? undefined : resetAll} />
             {isCloudConfigured && (
               <AccountMenu
                 user={user}
