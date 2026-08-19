@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://cleardebtplanner.netlify.app/sitemap.xml
+Sitemap: https://clearpathdebt.netlify.app/sitemap.xml
