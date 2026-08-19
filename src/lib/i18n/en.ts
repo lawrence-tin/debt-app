@@ -261,6 +261,23 @@ export const en: Translation = {
     commitAccount: 'Create an account to sync',
     goToDashboard: 'Go to my dashboard',
   },
+  checkIn: {
+    heading: 'Your monthly check-in',
+    tooSoon: (date) => `You started tracking this plan on ${date}. Check back next month to see how you're doing.`,
+    reducedAhead: (reduced, since, ahead) =>
+      `You've reduced your debt by ${reduced} since ${since} — about ${ahead} ahead of your original plan.`,
+    reducedBehind: (reduced, since, behind) =>
+      `You've reduced your debt by ${reduced} since ${since} — about ${behind} behind your original plan.`,
+    reducedOnTrack: (reduced, since) => `You've reduced your debt by ${reduced} since ${since} — right on pace with your original plan.`,
+    debtFree: "🎉 You've cleared every debt in this plan. Well done.",
+    dateEarlier: (months) => `Your projected debt-free date has moved forward by ${months} since you started.`,
+    dateLater: (months) => `Your projected debt-free date has moved back by ${months} since you started.`,
+    dateUnchanged: "Your projected debt-free date hasn't changed since you started.",
+    nextMilestone: (percent, when) => `Next up: ${percent}% paid off, around ${when}.`,
+    behindNudge: 'If you can find a little extra some months, the simulator below shows how much it would help.',
+    resetBaseline: 'Reset check-in baseline',
+    confirmResetBaseline: 'Start tracking from today\'s numbers instead? This resets what "ahead" and "behind" are measured against.',
+  },
   auth: {
     signIn: 'Sign in',
     signUp: 'Register',

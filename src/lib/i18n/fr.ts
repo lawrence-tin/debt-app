@@ -261,6 +261,24 @@ export const fr: Translation = {
     commitAccount: 'Créer un compte pour synchroniser',
     goToDashboard: 'Aller à mon tableau de bord',
   },
+  checkIn: {
+    heading: 'Votre bilan mensuel',
+    tooSoon: (date) => `Vous suivez ce plan depuis le ${date}. Revenez le mois prochain pour voir votre progression.`,
+    reducedAhead: (reduced, since, ahead) =>
+      `Vous avez réduit votre dette de ${reduced} depuis ${since} — environ ${ahead} d'avance sur votre plan initial.`,
+    reducedBehind: (reduced, since, behind) =>
+      `Vous avez réduit votre dette de ${reduced} depuis ${since} — environ ${behind} de retard sur votre plan initial.`,
+    reducedOnTrack: (reduced, since) => `Vous avez réduit votre dette de ${reduced} depuis ${since} — au rythme de votre plan initial.`,
+    debtFree: '🎉 Vous avez remboursé toutes les dettes de ce plan. Bravo !',
+    dateEarlier: (months) => `Votre date de libération de dettes prévue a avancé de ${months} depuis le début.`,
+    dateLater: (months) => `Votre date de libération de dettes prévue a reculé de ${months} depuis le début.`,
+    dateUnchanged: "Votre date de libération de dettes prévue n'a pas changé depuis le début.",
+    nextMilestone: (percent, when) => `À venir : ${percent} % remboursés, vers ${when}.`,
+    behindNudge: 'Si vous pouvez ajouter un peu plus certains mois, le simulateur ci-dessous montre à quel point cela aiderait.',
+    resetBaseline: 'Réinitialiser le point de référence',
+    confirmResetBaseline:
+      "Recommencer le suivi à partir des chiffres d'aujourd'hui ? Cela réinitialise la base de comparaison « avance »/« retard ».",
+  },
   auth: {
     signIn: 'Se connecter',
     signUp: "S'inscrire",

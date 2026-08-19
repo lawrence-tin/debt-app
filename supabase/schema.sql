@@ -38,12 +38,14 @@ create table if not exists public.settings (
   theme text not null default 'light',
   tried_strategies jsonb not null default '[]'::jsonb,
   has_downloaded_report boolean not null default false,
+  plan_baseline jsonb,
   updated_at timestamptz not null default now()
 );
 
 alter table public.settings add column if not exists priority_order jsonb not null default '[]'::jsonb;
 alter table public.settings add column if not exists tried_strategies jsonb not null default '[]'::jsonb;
 alter table public.settings add column if not exists has_downloaded_report boolean not null default false;
+alter table public.settings add column if not exists plan_baseline jsonb;
 
 -- One row per payment logged against a debt's recurring due date.
 create table if not exists public.payments (

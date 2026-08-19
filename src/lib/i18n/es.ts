@@ -261,6 +261,23 @@ export const es: Translation = {
     commitAccount: 'Crear una cuenta para sincronizar',
     goToDashboard: 'Ir a mi panel',
   },
+  checkIn: {
+    heading: 'Tu seguimiento mensual',
+    tooSoon: (date) => `Empezaste a seguir este plan el ${date}. Vuelve el próximo mes para ver tu avance.`,
+    reducedAhead: (reduced, since, ahead) =>
+      `Has reducido tu deuda en ${reduced} desde ${since} — unos ${ahead} por delante de tu plan original.`,
+    reducedBehind: (reduced, since, behind) =>
+      `Has reducido tu deuda en ${reduced} desde ${since} — unos ${behind} por detrás de tu plan original.`,
+    reducedOnTrack: (reduced, since) => `Has reducido tu deuda en ${reduced} desde ${since} — al ritmo de tu plan original.`,
+    debtFree: '🎉 Has saldado todas las deudas de este plan. ¡Bien hecho!',
+    dateEarlier: (months) => `Tu fecha libre de deudas proyectada se adelantó ${months} desde que empezaste.`,
+    dateLater: (months) => `Tu fecha libre de deudas proyectada se atrasó ${months} desde que empezaste.`,
+    dateUnchanged: 'Tu fecha libre de deudas proyectada no ha cambiado desde que empezaste.',
+    nextMilestone: (percent, when) => `Lo próximo: ${percent}% pagado, alrededor de ${when}.`,
+    behindNudge: 'Si puedes destinar un poco más algunos meses, el simulador de abajo te muestra cuánto ayudaría.',
+    resetBaseline: 'Reiniciar punto de referencia',
+    confirmResetBaseline: '¿Empezar a seguir desde los números de hoy? Esto reinicia la base con la que se mide "por delante" y "por detrás".',
+  },
   auth: {
     signIn: 'Iniciar sesión',
     signUp: 'Registrarse',

@@ -2,6 +2,7 @@ import type { Debt, Strategy } from './payoff'
 import type { Locale } from './i18n'
 import type { Payment } from './reminders'
 import type { Scenario } from './scenarios'
+import type { PlanBaseline } from './checkIn'
 
 export interface AppState {
   debts: Debt[]
@@ -23,6 +24,8 @@ export interface AppState {
   hasEditedBudget: boolean
   hasExplored: boolean
   hasCompletedOnboarding: boolean
+  /** Frozen reference point the monthly check-in measures "ahead"/"behind" against. */
+  planBaseline: PlanBaseline | null
 }
 
 const KEY = 'clearpath.v1'

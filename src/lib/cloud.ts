@@ -3,6 +3,7 @@ import type { Debt, DebtCategory, Strategy } from './payoff'
 import type { Locale } from './i18n'
 import type { Payment } from './reminders'
 import type { Scenario } from './scenarios'
+import type { PlanBaseline } from './checkIn'
 
 export interface CloudSettings {
   monthlyIncome: number
@@ -15,6 +16,7 @@ export interface CloudSettings {
   theme: 'light' | 'dark'
   triedStrategies: Strategy[]
   hasDownloadedReport: boolean
+  planBaseline: PlanBaseline | null
 }
 
 interface DebtRow {
@@ -39,6 +41,7 @@ interface SettingsRow {
   theme: 'light' | 'dark'
   tried_strategies: Strategy[] | null
   has_downloaded_report: boolean | null
+  plan_baseline: PlanBaseline | null
 }
 
 interface PaymentRow {
@@ -119,6 +122,7 @@ export async function fetchCloudSettings(userId: string): Promise<CloudSettings 
     theme: row.theme,
     triedStrategies: row.tried_strategies ?? [],
     hasDownloadedReport: row.has_downloaded_report ?? false,
+    planBaseline: row.plan_baseline ?? null,
   }
 }
 
@@ -197,6 +201,7 @@ export async function upsertSettingsRemote(userId: string, settings: CloudSettin
     theme: settings.theme,
     tried_strategies: settings.triedStrategies,
     has_downloaded_report: settings.hasDownloadedReport,
+    plan_baseline: settings.planBaseline,
     updated_at: new Date().toISOString(),
   })
   if (error) throw error

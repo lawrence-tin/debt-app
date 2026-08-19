@@ -240,6 +240,21 @@ export interface Translation {
     commitAccount: string
     goToDashboard: string
   }
+  checkIn: {
+    heading: string
+    tooSoon: (date: string) => string
+    reducedAhead: (reduced: string, since: string, ahead: string) => string
+    reducedBehind: (reduced: string, since: string, behind: string) => string
+    reducedOnTrack: (reduced: string, since: string) => string
+    debtFree: string
+    dateEarlier: (months: string) => string
+    dateLater: (months: string) => string
+    dateUnchanged: string
+    nextMilestone: (percent: number, when: string) => string
+    behindNudge: string
+    resetBaseline: string
+    confirmResetBaseline: string
+  }
   auth: {
     signIn: string
     signUp: string

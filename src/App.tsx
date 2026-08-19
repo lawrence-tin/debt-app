@@ -11,6 +11,7 @@ import PayoffCalendar from './components/PayoffCalendar'
 import AchievementBadges from './components/AchievementBadges'
 import Milestones from './components/Milestones'
 import DebtFreeHero from './components/DebtFreeHero'
+import MonthlyCheckIn from './components/MonthlyCheckIn'
 import Simulator from './components/Simulator'
 import Recommendation from './components/Recommendation'
 import Affordability from './components/Affordability'
@@ -25,6 +26,7 @@ const PayoffChart = lazy(() => import('./components/PayoffChart'))
 import ThemeToggle from './components/ThemeToggle'
 import Confetti from './components/Confetti'
 import { makeId, simulatePayoff, totalMinPayment, type Debt, type Strategy } from './lib/payoff'
+import { captureBaseline, type PlanBaseline } from './lib/checkIn'
 import { loadState, saveState, SAMPLE_DEBTS } from './lib/storage'
 import { guessCurrencyFromLocale } from './lib/currencies'
 import { guessLocaleFromBrowser, LANGUAGE_META, TRANSLATIONS, type Locale } from './lib/i18n'
@@ -95,6 +97,7 @@ export default function App() {
   const [hasEditedBudget, setHasEditedBudget] = useState(saved?.hasEditedBudget ?? false)
   const [hasExplored, setHasExplored] = useState(saved?.hasExplored ?? false)
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(saved?.hasCompletedOnboarding ?? false)
+  const [planBaseline, setPlanBaseline] = useState<PlanBaseline | null>(saved?.planBaseline ?? null)
 
   const { user, loading: authLoading } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -134,6 +137,7 @@ export default function App() {
       hasEditedBudget,
       hasExplored,
       hasCompletedOnboarding,
+      planBaseline,
     })
   }, [
     debts,
@@ -153,6 +157,7 @@ export default function App() {
     hasEditedBudget,
     hasExplored,
     hasCompletedOnboarding,
+    planBaseline,
   ])
 
   function currentSettings(): CloudSettings {
@@ -167,6 +172,7 @@ export default function App() {
       theme,
       triedStrategies,
       hasDownloadedReport,
+      planBaseline,
     }
   }
 
@@ -210,6 +216,7 @@ export default function App() {
             setTheme(cloudSettings.theme)
             setTriedStrategies(cloudSettings.triedStrategies.length > 0 ? cloudSettings.triedStrategies : [strategy])
             setHasDownloadedReport(cloudSettings.hasDownloadedReport)
+            setPlanBaseline(cloudSettings.planBaseline)
           }
         } else {
           // Fresh account: adopt whatever is currently in this browser as the starting point.
@@ -256,6 +263,7 @@ export default function App() {
     theme,
     triedStrategies,
     hasDownloadedReport,
+    planBaseline,
   ])
 
   const minPayment = totalMinPayment(debts)
@@ -274,6 +282,19 @@ export default function App() {
   )
   const results: Record<Strategy, typeof avalanche> = { avalanche, snowball, custom }
   const selected = results[strategy]
+
+  // Freeze "the plan you started with" the first time it becomes real, so the monthly
+  // check-in always has a fixed reference point to measure "ahead"/"behind" against.
+  useEffect(() => {
+    if (!planBaseline && debts.length > 0 && selected.feasible && !hydratingRef.current) {
+      setPlanBaseline(captureBaseline(selected))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debts.length, selected.feasible, planBaseline])
+
+  function handleResetBaseline() {
+    setPlanBaseline(captureBaseline(selected))
+  }
 
   function handleDebtsChange(next: Debt[]) {
     const removedPaidOff = debts.filter((d) => d.balance > 0 && !next.some((n) => n.id === d.id)).length
@@ -350,6 +371,7 @@ export default function App() {
     setStrategy(DEFAULTS.strategy)
     setPriorityOrder([])
     setHasCompletedOnboarding(false)
+    setPlanBaseline(null)
     for (const p of payments) if (user) deletePaymentRemote(user.id, p.id).catch(() => {})
     setPayments([])
   }
@@ -435,8 +457,19 @@ export default function App() {
           )}
 
           {debts.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-6 space-y-6">
               <DebtFreeHero debts={debts} payments={payments} result={selected} currency={currency} locale={dateLocale} t={t} />
+              {planBaseline && (
+                <MonthlyCheckIn
+                  debts={debts}
+                  baseline={planBaseline}
+                  liveResult={selected}
+                  currency={currency}
+                  locale={dateLocale}
+                  t={t}
+                  onResetBaseline={handleResetBaseline}
+                />
+              )}
             </div>
           )}
 
