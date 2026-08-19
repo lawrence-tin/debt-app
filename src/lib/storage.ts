@@ -26,6 +26,8 @@ export interface AppState {
   hasCompletedOnboarding: boolean
   /** Frozen reference point the monthly check-in measures "ahead"/"behind" against. */
   planBaseline: PlanBaseline | null
+  /** Local-only: whether this browser already joined the ClearPath Plus interest waitlist. */
+  hasJoinedPlusWaitlist: boolean
 }
 
 const KEY = 'clearpath.v1'

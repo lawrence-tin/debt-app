@@ -74,10 +74,24 @@ create table if not exists public.scenarios (
 
 create index if not exists scenarios_user_id_idx on public.scenarios (user_id);
 
+-- One row per person who expressed interest in ClearPath Plus (Phase 6: interest-only
+-- waitlist, no real billing yet). Not tied to an account — anyone can join, signed in or
+-- not — so there is deliberately no user_id/select policy: this table is write-only from
+-- the client. Only the project owner can read entries, via the Supabase dashboard.
+create table if not exists public.plus_waitlist (
+  id uuid primary key default gen_random_uuid(),
+  email text not null check (email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+  locale text,
+  currency text,
+  created_at timestamptz not null default now(),
+  unique (email)
+);
+
 alter table public.debts enable row level security;
 alter table public.settings enable row level security;
 alter table public.payments enable row level security;
 alter table public.scenarios enable row level security;
+alter table public.plus_waitlist enable row level security;
 
 -- Each user may only see/change their own rows.
 drop policy if exists "debts_select_own" on public.debts;
@@ -139,3 +153,8 @@ create policy "scenarios_update_own" on public.scenarios
 drop policy if exists "scenarios_delete_own" on public.scenarios;
 create policy "scenarios_delete_own" on public.scenarios
   for delete using (auth.uid() = user_id);
+
+-- Anyone may register interest; nobody can read the list back through the client API.
+drop policy if exists "plus_waitlist_insert_anyone" on public.plus_waitlist;
+create policy "plus_waitlist_insert_anyone" on public.plus_waitlist
+  for insert with check (true);

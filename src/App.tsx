@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { BookOpen, RotateCcw } from 'lucide-react'
+import { BookOpen, RotateCcw, Sparkles } from 'lucide-react'
 import BudgetPanel from './components/BudgetPanel'
 import DebtsPanel from './components/DebtsPanel'
 import StrategyPicker from './components/StrategyPicker'
@@ -23,6 +23,7 @@ import AccountMenu from './components/AccountMenu'
 import AuthModal from './components/AuthModal'
 import PrivacyBadge from './components/PrivacyBadge'
 import EducationCenter from './components/EducationCenter'
+import PricingModal from './components/PricingModal'
 
 const PayoffChart = lazy(() => import('./components/PayoffChart'))
 import ThemeToggle from './components/ThemeToggle'
@@ -100,10 +101,12 @@ export default function App() {
   const [hasExplored, setHasExplored] = useState(saved?.hasExplored ?? false)
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(saved?.hasCompletedOnboarding ?? false)
   const [planBaseline, setPlanBaseline] = useState<PlanBaseline | null>(saved?.planBaseline ?? null)
+  const [hasJoinedPlusWaitlist, setHasJoinedPlusWaitlist] = useState(saved?.hasJoinedPlusWaitlist ?? false)
 
   const { user, loading: authLoading } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showEducation, setShowEducation] = useState(false)
+  const [showPricing, setShowPricing] = useState(false)
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle')
   const cloudDebtsRef = useRef<Debt[]>(debts)
   const hydratingRef = useRef(false)
@@ -141,6 +144,7 @@ export default function App() {
       hasExplored,
       hasCompletedOnboarding,
       planBaseline,
+      hasJoinedPlusWaitlist,
     })
   }, [
     debts,
@@ -161,6 +165,7 @@ export default function App() {
     hasExplored,
     hasCompletedOnboarding,
     planBaseline,
+    hasJoinedPlusWaitlist,
   ])
 
   function currentSettings(): CloudSettings {
@@ -408,6 +413,16 @@ export default function App() {
       <Confetti trigger={confettiTrigger} />
       {showAuthModal && <AuthModal t={t} onClose={() => setShowAuthModal(false)} />}
       {showEducation && <EducationCenter t={t} onClose={() => setShowEducation(false)} />}
+      {showPricing && (
+        <PricingModal
+          t={t}
+          locale={dateLocale}
+          currency={currency}
+          hasJoined={hasJoinedPlusWaitlist}
+          onJoined={() => setHasJoinedPlusWaitlist(true)}
+          onClose={() => setShowPricing(false)}
+        />
+      )}
 
       <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
@@ -425,6 +440,12 @@ export default function App() {
               className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
             >
               <BookOpen size={13} /> <span className="hidden sm:inline">{t.education.openLabel}</span>
+            </button>
+            <button
+              onClick={() => setShowPricing(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/20"
+            >
+              <Sparkles size={13} /> {t.plus.badge}
             </button>
             <PrivacyBadge t={t} />
             {!showOnboarding && (

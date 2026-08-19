@@ -214,6 +214,31 @@ export interface Translation {
     title: string
     message: string
   }
+  plus: {
+    badge: string
+    heading: string
+    subheading: string
+    previewNote: string
+    monthly: string
+    annual: string
+    perMonth: string
+    perYear: string
+    saveBadge: (percent: number) => string
+    freeTitle: string
+    freePrice: string
+    freeFeatures: [string, string, string]
+    plusTitle: string
+    plusFeatures: [string, string, string, string, string]
+    emailPlaceholder: string
+    notifyButton: string
+    joining: string
+    joinedTitle: string
+    joinedBody: string
+    errorGeneric: string
+    errorInvalidEmail: string
+    notConfigured: string
+    closeLabel: string
+  }
   education: {
     openLabel: string
     heading: string
