@@ -43,7 +43,6 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
     onChange(debts.filter((d) => d.id !== id))
   }
 
-  const nameInvalid = showError && !draft.name
   const balanceInvalid = showError && !(Number(draft.balance) > 0)
   const minPaymentInvalid = showError && !(Number(draft.minPayment) > 0)
   const invalidRing = 'ring-2 ring-rose-400 border-rose-400 dark:border-rose-500'
@@ -53,15 +52,18 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
     const apr = Number(draft.apr)
     const minPayment = Number(draft.minPayment)
     const dueDay = Number(draft.dueDay)
-    if (!draft.name || !(balance > 0) || !(minPayment > 0)) {
+    if (!(balance > 0) || !(minPayment > 0)) {
       setShowError(true)
       return
     }
+    // Name is optional — picking a category is enough to identify the debt if the
+    // user doesn't want to type a custom nickname for it.
+    const name = draft.name.trim() || t.category[draft.category]
     onChange([
       ...debts,
       {
         id: makeId(),
-        name: draft.name,
+        name,
         category: draft.category,
         balance,
         originalBalance: balance,
@@ -202,8 +204,7 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
               value={draft.name}
               onChange={(e) => updateDraft({ name: e.target.value })}
               placeholder={t.debts.addNamePlaceholder}
-              aria-invalid={nameInvalid}
-              className={`col-span-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white ${nameInvalid ? invalidRing : ''}`}
+              className="col-span-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
             />
             <select
               value={draft.category}
