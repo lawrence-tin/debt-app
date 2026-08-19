@@ -30,6 +30,7 @@ import ThemeToggle from './components/ThemeToggle'
 import Confetti from './components/Confetti'
 import { makeId, simulatePayoff, totalMinPayment, type Debt, type Strategy } from './lib/payoff'
 import { captureBaseline, type PlanBaseline } from './lib/checkIn'
+import { trackEvent } from './lib/analytics'
 import { loadState, saveState, SAMPLE_DEBTS } from './lib/storage'
 import { guessCurrencyFromLocale } from './lib/currencies'
 import { guessLocaleFromBrowser, LANGUAGE_META, TRANSLATIONS, type Locale } from './lib/i18n'
@@ -233,6 +234,7 @@ export default function App() {
           await Promise.all(payments.map((p) => insertPaymentRemote(user.id, p)))
           await Promise.all(scenarios.map((s) => insertScenarioRemote(user.id, s)))
           cloudDebtsRef.current = debts
+          trackEvent('account_created', user.id)
         }
         setSyncStatus('synced')
       } catch {
@@ -304,6 +306,32 @@ export default function App() {
     setPlanBaseline(captureBaseline(selected))
   }
 
+  // Activation funnel (spec section 18) — first-party events into this project's own
+  // Supabase, deduped per visitor by trackEvent itself. Covers both the guided onboarding
+  // wizard (via its onStart callback below) and a returning user editing the dashboard
+  // directly, since either path ends up changing this same App-level state.
+  useEffect(() => {
+    trackEvent('visitor', user?.id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (debts.length > 0) {
+      trackEvent('plan_started', user?.id)
+      trackEvent('debt_added', user?.id)
+    }
+    if (debts.length > 0 && monthlyIncome > 0) trackEvent('plan_completed', user?.id)
+    if (selected.feasible && debts.length > 0) trackEvent('saw_debt_free_date', user?.id)
+  }, [debts.length, monthlyIncome, selected.feasible, user?.id])
+
+  useEffect(() => {
+    if (extraPayment > 0) trackEvent('simulator_used', user?.id)
+  }, [extraPayment, user?.id])
+
+  useEffect(() => {
+    if (hasCompletedOnboarding) trackEvent('plan_saved', user?.id)
+  }, [hasCompletedOnboarding, user?.id])
+
   function handleDebtsChange(next: Debt[]) {
     const removedPaidOff = debts.filter((d) => d.balance > 0 && !next.some((n) => n.id === d.id)).length
     if (removedPaidOff > 0) setDebtsPaidOffCount((n) => n + removedPaidOff)
@@ -351,6 +379,7 @@ export default function App() {
   function handleSaveScenario(scenario: Scenario) {
     setScenarios((prev) => [...prev, scenario])
     if (user) insertScenarioRemote(user.id, scenario).catch(() => {})
+    trackEvent('scenario_saved', user?.id)
   }
 
   function handleApplyScenario(scenario: Scenario) {
@@ -478,6 +507,7 @@ export default function App() {
           onComplete={handleOnboardingComplete}
           onSkip={() => setHasCompletedOnboarding(true)}
           onRequestAuth={() => setShowAuthModal(true)}
+          onStart={() => trackEvent('plan_started', user?.id)}
         />
       ) : (
         <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">

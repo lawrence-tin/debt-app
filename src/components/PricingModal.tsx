@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Check, Loader2, Mail, Sparkles, X } from 'lucide-react'
 import { isCloudConfigured } from '../lib/supabase'
 import { isValidEmail, joinPlusWaitlist } from '../lib/waitlist'
+import { trackEvent } from '../lib/analytics'
 import type { Translation } from '../lib/i18n'
 
 interface Props {
@@ -38,6 +39,7 @@ export default function PricingModal({ t, locale, currency, hasJoined, onJoined,
     setSubmitting(true)
     try {
       await joinPlusWaitlist(email, locale, currency)
+      trackEvent('plus_interest')
       onJoined()
     } catch {
       setError(t.plus.errorGeneric)

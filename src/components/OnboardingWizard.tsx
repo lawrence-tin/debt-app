@@ -35,9 +35,12 @@ interface Props {
   onComplete: (result: OnboardingResult) => void
   onSkip: () => void
   onRequestAuth: () => void
+  /** Fired when "Get started" is clicked — the one funnel moment App-level state can't
+   *  otherwise see, since nothing else changes if someone abandons before adding a debt. */
+  onStart?: () => void
 }
 
-export default function OnboardingWizard({ currency, locale, t, onComplete, onSkip, onRequestAuth }: Props) {
+export default function OnboardingWizard({ currency, locale, t, onComplete, onSkip, onRequestAuth, onStart }: Props) {
   const [step, setStep] = useState<Step>('welcome')
   const [income, setIncome] = useState('')
   const [expenses, setExpenses] = useState('')
@@ -113,7 +116,10 @@ export default function OnboardingWizard({ currency, locale, t, onComplete, onSk
             </p>
           </div>
           <button
-            onClick={() => setStep('income')}
+            onClick={() => {
+              onStart?.()
+              setStep('income')
+            }}
             className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
           >
             {t.onboarding.getStarted} <ArrowRight size={16} />

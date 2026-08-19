@@ -87,11 +87,32 @@ create table if not exists public.plus_waitlist (
   unique (email)
 );
 
+-- First-party product-analytics event log (spec section 18). Deliberately not a
+-- third-party vendor — events never leave this Supabase project. visitor_id is an
+-- anonymous, client-generated id persisted in localStorage (not the auth user id),
+-- so the activation/retention funnel can be measured before someone ever signs in.
+-- Write-only from the client, same pattern as plus_waitlist above: only the project
+-- owner can read it back, via the Supabase dashboard or a service-role query — see
+-- supabase/analytics-queries.md for ready-to-run funnel queries.
+create table if not exists public.analytics_events (
+  id uuid primary key default gen_random_uuid(),
+  visitor_id uuid not null,
+  user_id uuid references auth.users(id) on delete set null,
+  event text not null,
+  metadata jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists analytics_events_visitor_id_idx on public.analytics_events (visitor_id);
+create index if not exists analytics_events_event_idx on public.analytics_events (event);
+create index if not exists analytics_events_created_at_idx on public.analytics_events (created_at);
+
 alter table public.debts enable row level security;
 alter table public.settings enable row level security;
 alter table public.payments enable row level security;
 alter table public.scenarios enable row level security;
 alter table public.plus_waitlist enable row level security;
+alter table public.analytics_events enable row level security;
 
 -- Each user may only see/change their own rows.
 drop policy if exists "debts_select_own" on public.debts;
@@ -157,4 +178,10 @@ create policy "scenarios_delete_own" on public.scenarios
 -- Anyone may register interest; nobody can read the list back through the client API.
 drop policy if exists "plus_waitlist_insert_anyone" on public.plus_waitlist;
 create policy "plus_waitlist_insert_anyone" on public.plus_waitlist
+  for insert with check (true);
+
+-- Anyone (signed in or not) may log a product event; nobody can read events back
+-- through the client API.
+drop policy if exists "analytics_events_insert_anyone" on public.analytics_events;
+create policy "analytics_events_insert_anyone" on public.analytics_events
   for insert with check (true);
