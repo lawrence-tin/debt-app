@@ -15,7 +15,7 @@ export default function AccountMenu({ user, syncStatus, t, onSignIn, onSignOut }
     return (
       <button
         onClick={onSignIn}
-        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-slate-700 dark:text-slate-300"
+        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-slate-700 dark:text-slate-300"
       >
         <UserRound size={13} /> {t.auth.signIn}
       </button>

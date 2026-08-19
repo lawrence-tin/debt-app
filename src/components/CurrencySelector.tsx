@@ -21,7 +21,7 @@ export default function CurrencySelector({ value, onChange, t, compact }: Props)
       aria-label={t.currency.ariaLabel}
       className={
         compact
-          ? 'rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
+          ? 'max-w-[140px] truncate rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 outline-none focus:ring-2 focus:ring-emerald-500 sm:max-w-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
           : 'w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white'
       }
     >
