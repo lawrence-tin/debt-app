@@ -209,6 +209,27 @@ export interface Translation {
     heading: string
     items: [string, string, string, string, string, string]
   }
+  privacy: {
+    badge: string
+    title: string
+    message: string
+  }
+  education: {
+    openLabel: string
+    heading: string
+    subheading: string
+    closeLabel: string
+    topics: {
+      avalancheVsSnowball: { title: string; body: [string, string, string, string] }
+      apr: { title: string; body: [string, string, string] }
+      minimumPayments: { title: string; body: [string, string, string] }
+      extraPayments: { title: string; body: [string, string, string] }
+      consolidation: { title: string; body: [string, string, string] }
+      debtReview: { title: string; body: [string, string, string] }
+      affordability: { title: string; body: [string, string, string] }
+      emergencyBuffer: { title: string; body: [string, string, string] }
+    }
+  }
   onboarding: {
     stepOf: (step: number, total: number) => string
     back: string

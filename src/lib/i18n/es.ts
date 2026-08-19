@@ -230,6 +230,85 @@ export const es: Translation = {
       'Tu fecha libre de deudas proyectada es una estimación, no una garantía.',
     ],
   },
+  privacy: {
+    badge: 'Privado por defecto',
+    title: 'Tu deuda es tuya.',
+    message:
+      'Nada de lo que ingreses aquí se envía a ningún lado a menos que elijas sincronizarlo. Empieza sin una cuenta — crea una solo si quieres que tu plan se sincronice entre tus dispositivos.',
+  },
+  education: {
+    openLabel: 'Aprender',
+    heading: 'Entender el pago de deudas',
+    subheading: 'Explicaciones en lenguaje simple, no son asesoría financiera. Si el dinero está realmente ajustado, un profesional registrado puede ayudarte a decidir qué hacer.',
+    closeLabel: 'Cerrar',
+    topics: {
+      avalancheVsSnowball: {
+        title: 'Avalancha vs Bola de nieve',
+        body: [
+          'Avalancha y Bola de nieve son dos formas de decidir qué deuda pagar primero una vez cubiertos tus pagos mínimos.',
+          'Avalancha ataca primero la deuda con la tasa de interés más alta. Suele ser la forma más económica de salir de deudas, porque pasas menos tiempo pagando interés sobre tu deuda más cara.',
+          'Bola de nieve ataca primero el saldo más pequeño. Normalmente no ahorra tanto interés, pero saldar una deuda completa antes puede ayudarte a mantener la motivación.',
+          'No hay una respuesta universalmente correcta — ClearPath te muestra el resultado proyectado de ambas, además de un orden Personalizado si prefieres elegir tú mismo.',
+        ],
+      },
+      apr: {
+        title: 'Entender la TAE y el interés',
+        body: [
+          'La TAE (Tasa Anual Equivalente) es el costo anual de pedir prestado, expresado como porcentaje de lo que debes. Con una TAE del 25%, mantener un saldo cuesta aproximadamente 25 de interés al año por cada 100 que debes, si nada más cambia.',
+          'El interés normalmente se calcula cada mes sobre el saldo que queda después de tu último pago — así que pagar una deuda más rápido, aunque sea un poco, reduce cuánto interés se acumula de ahí en adelante.',
+          'Las deudas con una TAE alta — muchas tarjetas de crédito y cuentas de tienda — suelen ser las más costosas de mantener con el tiempo, por eso suelen priorizarse primero en una estrategia de Avalancha.',
+        ],
+      },
+      minimumPayments: {
+        title: 'Pagos mínimos',
+        body: [
+          'Un pago mínimo es la cantidad más pequeña que un prestamista exige cada mes para mantener una cuenta al día.',
+          'Pagar solo el mínimo evita el incumplimiento, pero en una deuda con interés alto puede significar que la mayor parte de tu pago va al interés y no al saldo en sí — lo que puede alargar el pago durante años.',
+          'Las proyecciones de ClearPath siempre cubren primero los pagos mínimos y luego aplican cualquier extra según la estrategia que elijas.',
+        ],
+      },
+      extraPayments: {
+        title: 'Estrategias de pago extra',
+        body: [
+          'Cualquier monto que pagues por encima de los pagos mínimos combinados va directo a reducir un saldo más rápido, lo que reduce el interés futuro.',
+          'A medida que se salda cada deuda, el dinero que antes iba a su pago mínimo no desaparece — ClearPath lo traslada a la siguiente deuda según el orden de tu estrategia, así que tus pagos mensuales ganan impulso con el tiempo.',
+          'Prueba el Simulador ClearPath para ver cómo un monto extra específico — incluso uno modesto — cambia tu fecha libre de deudas proyectada.',
+        ],
+      },
+      consolidation: {
+        title: 'Consolidación de deudas',
+        body: [
+          'La consolidación de deudas significa combinar varias deudas en un solo préstamo o facilidad nueva, normalmente para simplificar los pagos o quizás conseguir una tasa de interés más baja.',
+          'Puede reducir la cantidad de cuentas que manejas y a veces bajar tu costo total de interés — pero también puede alargar tu plazo de pago, sumar comisiones o requerir una garantía, según el producto.',
+          'La consolidación no es automáticamente mejor ni peor que tus deudas actuales — depende de la oferta específica. Esto es información general, no una recomendación; compara bien los términos reales, o consulta a un profesional, antes de consolidar.',
+        ],
+      },
+      debtReview: {
+        title: 'Revisión o asesoría de deudas',
+        body: [
+          'En varios países existe un proceso formal y regulado — a veces llamado revisión de deuda o asesoría de deudas — pensado para ayudar a consumidores sobreendeudados a reestructurar sus pagos.',
+          'Normalmente implica que un asesor de deudas registrado evalúe tus finanzas y, cuando corresponda, negocie nuevos términos de pago con tus acreedores en tu nombre.',
+          'ClearPath es una herramienta de planificación, no un asesor de deudas registrado, y nada aquí es asesoría legal o financiera. Si tus pagos se sienten inmanejables, un asesor de deudas registrado o el regulador correspondiente en tu país puede ayudarte a entender si este proceso es adecuado para tu situación.',
+        ],
+      },
+      affordability: {
+        title: 'Cómo evaluar si un plan de pago es asequible',
+        body: [
+          'Un punto de partida sencillo: suma tus gastos mensuales esenciales — alquiler, alimentos, transporte, seguros — y tus pagos mínimos de deuda requeridos, y réstalos de tu ingreso mensual.',
+          'Si lo que queda es poco o negativo, tu plan actual podría estar presionando de verdad tu presupuesto, aunque técnicamente estés al día con cada pago.',
+          'La Verificación de asequibilidad de ClearPath hace este cálculo automáticamente y te avisa cuando tus pagos mínimos ocupan una gran parte de lo disponible, para que lo veas antes de decidir si agregar un extra.',
+        ],
+      },
+      emergencyBuffer: {
+        title: 'Construir un pequeño colchón de emergencia mientras pagas deudas',
+        body: [
+          'Destinar cada peso disponible a la deuda parece eficiente, pero sin ningún colchón, un solo gasto inesperado — una reparación del auto, un gasto médico — a menudo termina otra vez en la tarjeta de crédito, deshaciendo parte de ese progreso.',
+          'A muchas personas les resulta útil construir primero un colchón pequeño — incluso un monto modesto — antes de acelerar agresivamente el pago de deudas, solo para absorber lo inesperado sin volver a endeudarse.',
+          'No hay una regla fija sobre qué tan grande debe ser un colchón; depende de tu situación. La idea es el equilibrio — un poco de margen puede hacer que un plan de pago sea más fácil de sostener en la práctica.',
+        ],
+      },
+    },
+  },
   onboarding: {
     stepOf: (step, total) => `Paso ${step} de ${total}`,
     back: 'Atrás',

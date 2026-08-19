@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { RotateCcw } from 'lucide-react'
+import { BookOpen, RotateCcw } from 'lucide-react'
 import BudgetPanel from './components/BudgetPanel'
 import DebtsPanel from './components/DebtsPanel'
 import StrategyPicker from './components/StrategyPicker'
@@ -21,6 +21,8 @@ import CurrencySelector from './components/CurrencySelector'
 import LanguageSelector from './components/LanguageSelector'
 import AccountMenu from './components/AccountMenu'
 import AuthModal from './components/AuthModal'
+import PrivacyBadge from './components/PrivacyBadge'
+import EducationCenter from './components/EducationCenter'
 
 const PayoffChart = lazy(() => import('./components/PayoffChart'))
 import ThemeToggle from './components/ThemeToggle'
@@ -101,6 +103,7 @@ export default function App() {
 
   const { user, loading: authLoading } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showEducation, setShowEducation] = useState(false)
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle')
   const cloudDebtsRef = useRef<Debt[]>(debts)
   const hydratingRef = useRef(false)
@@ -404,6 +407,7 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900 dark:from-slate-950 dark:to-slate-900 dark:text-slate-100">
       <Confetti trigger={confettiTrigger} />
       {showAuthModal && <AuthModal t={t} onClose={() => setShowAuthModal(false)} />}
+      {showEducation && <EducationCenter t={t} onClose={() => setShowEducation(false)} />}
 
       <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
@@ -416,6 +420,13 @@ export default function App() {
           <div className="flex items-center gap-2">
             <LanguageSelector value={language} onChange={handleLanguageChange} t={t} />
             <CurrencySelector value={currency} onChange={handleCurrencyChange} t={t} compact />
+            <button
+              onClick={() => setShowEducation(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            >
+              <BookOpen size={13} /> <span className="hidden sm:inline">{t.education.openLabel}</span>
+            </button>
+            <PrivacyBadge t={t} />
             {!showOnboarding && (
               <button
                 onClick={resetAll}

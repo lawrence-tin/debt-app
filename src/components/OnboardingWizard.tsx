@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, ArrowRight, Calculator, PartyPopper } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Calculator, Lock, PartyPopper } from 'lucide-react'
 import DebtsPanel from './DebtsPanel'
 import StrategyPicker from './StrategyPicker'
 import Simulator from './Simulator'
@@ -106,9 +106,15 @@ export default function OnboardingWizard({ currency, locale, t, onComplete, onSk
             {t.onboarding.welcomeTitle}
           </h1>
           <p className="mx-auto mt-3 max-w-md text-slate-500 dark:text-slate-400">{t.onboarding.welcomeSubtitle}</p>
+          <div className="mx-auto mt-5 flex max-w-sm items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
+            <Lock size={14} className="mt-0.5 shrink-0 text-slate-400" />
+            <p>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">{t.privacy.title}</span> {t.privacy.message}
+            </p>
+          </div>
           <button
             onClick={() => setStep('income')}
-            className="mt-8 inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
           >
             {t.onboarding.getStarted} <ArrowRight size={16} />
           </button>

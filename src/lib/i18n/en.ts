@@ -230,6 +230,85 @@ export const en: Translation = {
       'Your projected debt-free date is an estimate, not a guarantee.',
     ],
   },
+  privacy: {
+    badge: 'Private by default',
+    title: 'Your debt is yours.',
+    message:
+      'Nothing you enter here is sent anywhere unless you choose to sync it. Start without an account — create one only if you want your plan synced across your devices.',
+  },
+  education: {
+    openLabel: 'Learn',
+    heading: 'Understanding debt repayment',
+    subheading: 'Plain-language explanations, not financial advice. If money is genuinely tight, a registered professional can help you decide what to do.',
+    closeLabel: 'Close',
+    topics: {
+      avalancheVsSnowball: {
+        title: 'Avalanche vs Snowball',
+        body: [
+          "Avalanche and Snowball are two ways to decide which debt to pay off first once your minimum payments are covered.",
+          'Avalanche targets the debt with the highest interest rate first. It\'s usually the cheapest way to become debt-free, because you spend less time paying interest on your most expensive debt.',
+          "Snowball targets the smallest balance first. It doesn't usually save as much in interest, but clearing a whole debt sooner can make it easier to stay motivated.",
+          "There's no universally right answer — ClearPath shows you the projected outcome of both, plus a Custom order if you'd rather choose for yourself.",
+        ],
+      },
+      apr: {
+        title: 'Understanding APR and interest',
+        body: [
+          'APR (Annual Percentage Rate) is the yearly cost of borrowing, shown as a percentage of what you owe. At 25% APR, carrying a balance costs roughly 25 in interest per year for every 100 you owe, if nothing else changes.',
+          "Interest is usually calculated monthly on whatever balance is left after your last payment — so paying down a debt faster, even by a little, reduces how much interest it builds up going forward.",
+          'Debts with a high APR — many credit cards and store accounts — generally cost the most to carry over time, which is why they\'re often prioritised first in an Avalanche strategy.',
+        ],
+      },
+      minimumPayments: {
+        title: 'Minimum payments',
+        body: [
+          'A minimum payment is the smallest amount a lender requires each month to keep an account in good standing.',
+          "Paying only the minimum keeps you out of default, but on a high-interest debt it can mean most of your payment goes toward interest rather than the balance itself — which can stretch repayment out for years.",
+          "ClearPath's projections always cover minimum payments first, then apply anything extra according to your chosen strategy.",
+        ],
+      },
+      extraPayments: {
+        title: 'Extra-payment strategies',
+        body: [
+          'Any amount you pay above the combined minimum payments goes straight toward reducing a balance faster, which reduces future interest.',
+          "As each debt is paid off, the money that used to go toward its minimum payment doesn't disappear — ClearPath rolls it into the next debt in your strategy's order, so your monthly payments build momentum over time.",
+          'Try the ClearPath Simulator to see how a specific extra amount — even a modest one — changes your projected debt-free date.',
+        ],
+      },
+      consolidation: {
+        title: 'Debt consolidation',
+        body: [
+          'Debt consolidation means combining several debts into a single new loan or facility, usually to simplify repayments or potentially secure a lower interest rate.',
+          "It can reduce the number of accounts you're juggling and sometimes lower your overall interest cost — but it can also extend your repayment term, add fees, or require security, depending on the product.",
+          "Consolidation isn't automatically better or worse than your current debts — it depends on the specific offer. This is general information, not a recommendation; compare the actual terms carefully, or speak to a professional, before consolidating.",
+        ],
+      },
+      debtReview: {
+        title: 'Debt review / debt counselling',
+        body: [
+          'Debt review — sometimes called debt counselling — is a formal, regulated process in South Africa intended to help over-indebted consumers restructure their repayments under the National Credit Act.',
+          'It typically involves a registered debt counsellor assessing your finances and, where appropriate, negotiating new repayment terms with your creditors on your behalf.',
+          "ClearPath is a planning tool, not a registered debt counsellor, and nothing here is legal or financial advice. If your repayments feel unmanageable, a registered debt counsellor or the National Credit Regulator can help you understand whether debt review fits your situation.",
+        ],
+      },
+      affordability: {
+        title: 'How to assess whether a repayment plan is affordable',
+        body: [
+          'A rough starting point: add up your essential monthly expenses — rent, groceries, transport, insurance — and your required minimum debt payments, then subtract both from your monthly income.',
+          "If what's left over is thin or negative, your current plan may be putting real pressure on your budget, even if you're technically keeping up with every payment.",
+          "ClearPath's Affordability check does this calculation automatically and flags when your minimum payments are taking up a large share of what's available, so you can see it before deciding whether to add extra.",
+        ],
+      },
+      emergencyBuffer: {
+        title: 'Building a small emergency buffer while repaying debt',
+        body: [
+          "Putting every spare bit of money toward debt feels efficient, but with no buffer at all, a single unexpected expense — a car repair, a medical bill — often ends up back on a credit card, undoing some of that progress.",
+          'Many people find it useful to build a small buffer first — even a modest amount — before aggressively accelerating debt repayment, purely to absorb the unexpected without borrowing again.',
+          "There's no fixed rule for how big a buffer should be; it depends on your situation. The point is balance — a little breathing room can make a repayment plan easier to actually stick to.",
+        ],
+      },
+    },
+  },
   onboarding: {
     stepOf: (step, total) => `Step ${step} of ${total}`,
     back: 'Back',

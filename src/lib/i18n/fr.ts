@@ -230,6 +230,86 @@ export const fr: Translation = {
       'Votre date de libération de dettes projetée est une estimation, pas une garantie.',
     ],
   },
+  privacy: {
+    badge: 'Privé par défaut',
+    title: 'Votre dette vous appartient.',
+    message:
+      "Rien de ce que vous saisissez ici n'est envoyé où que ce soit, sauf si vous choisissez de le synchroniser. Commencez sans compte — créez-en un seulement si vous voulez synchroniser votre plan entre vos appareils.",
+  },
+  education: {
+    openLabel: 'Apprendre',
+    heading: 'Comprendre le remboursement de dettes',
+    subheading:
+      "Des explications simples, pas un conseil financier. Si l'argent est vraiment serré, un professionnel agréé peut vous aider à décider quoi faire.",
+    closeLabel: 'Fermer',
+    topics: {
+      avalancheVsSnowball: {
+        title: 'Avalanche vs Boule de neige',
+        body: [
+          'Avalanche et Boule de neige sont deux façons de décider quelle dette rembourser en premier une fois vos paiements minimums couverts.',
+          "Avalanche cible d'abord la dette au taux d'intérêt le plus élevé. C'est généralement la façon la moins coûteuse de sortir de l'endettement, car vous passez moins de temps à payer des intérêts sur votre dette la plus chère.",
+          "Boule de neige cible d'abord le plus petit solde. Cela ne fait généralement pas économiser autant d'intérêts, mais rembourser une dette entière plus tôt peut aider à rester motivé.",
+          "Il n'y a pas de réponse universellement juste — ClearPath vous montre le résultat projeté des deux, ainsi qu'un ordre Personnalisé si vous préférez choisir vous-même.",
+        ],
+      },
+      apr: {
+        title: 'Comprendre le TAEG et les intérêts',
+        body: [
+          "Le TAEG (Taux Annuel Effectif Global) est le coût annuel d'un emprunt, exprimé en pourcentage de ce que vous devez. Avec un TAEG de 25 %, porter un solde coûte environ 25 d'intérêts par an pour chaque 100 dû, si rien d'autre ne change.",
+          "Les intérêts sont généralement calculés chaque mois sur le solde restant après votre dernier paiement — rembourser une dette plus vite, même légèrement, réduit donc les intérêts qui s'accumulent ensuite.",
+          "Les dettes à TAEG élevé — de nombreuses cartes de crédit et comptes magasin — coûtent généralement le plus cher à porter dans le temps, c'est pourquoi elles sont souvent priorisées en premier dans une stratégie Avalanche.",
+        ],
+      },
+      minimumPayments: {
+        title: 'Paiements minimums',
+        body: [
+          'Un paiement minimum est le montant le plus faible qu\'un prêteur exige chaque mois pour maintenir un compte à jour.',
+          "Ne payer que le minimum évite le défaut de paiement, mais sur une dette à taux élevé, cela peut signifier que l'essentiel de votre paiement va aux intérêts plutôt qu'au solde lui-même — ce qui peut étaler le remboursement sur des années.",
+          "Les projections de ClearPath couvrent toujours les paiements minimums en premier, puis appliquent tout supplément selon la stratégie choisie.",
+        ],
+      },
+      extraPayments: {
+        title: 'Stratégies de paiement supplémentaire',
+        body: [
+          "Tout montant payé au-delà des paiements minimums combinés réduit un solde plus rapidement, ce qui diminue les intérêts futurs.",
+          "À mesure que chaque dette est remboursée, l'argent qui allait auparavant à son paiement minimum ne disparaît pas — ClearPath le reporte sur la dette suivante selon l'ordre de votre stratégie, si bien que vos paiements mensuels prennent de l'ampleur avec le temps.",
+          "Essayez le Simulateur ClearPath pour voir comment un montant supplémentaire précis — même modeste — change votre date de libération de dettes projetée.",
+        ],
+      },
+      consolidation: {
+        title: 'Consolidation de dettes',
+        body: [
+          "La consolidation de dettes consiste à regrouper plusieurs dettes en un seul nouveau prêt ou facilité, généralement pour simplifier les remboursements ou obtenir un taux d'intérêt plus bas.",
+          "Elle peut réduire le nombre de comptes à gérer et parfois abaisser votre coût total d'intérêts — mais elle peut aussi allonger votre durée de remboursement, ajouter des frais, ou exiger une garantie, selon le produit.",
+          "La consolidation n'est pas automatiquement meilleure ou pire que vos dettes actuelles — cela dépend de l'offre précise. Ceci est une information générale, pas une recommandation ; comparez soigneusement les conditions réelles, ou consultez un professionnel, avant de consolider.",
+        ],
+      },
+      debtReview: {
+        title: 'Révision ou accompagnement de dettes',
+        body: [
+          "Dans plusieurs pays, il existe un processus formel et réglementé — parfois appelé révision de dette ou accompagnement budgétaire — destiné à aider les consommateurs surendettés à restructurer leurs remboursements.",
+          "Il implique généralement qu'un conseiller en dettes agréé évalue vos finances et, le cas échéant, négocie de nouvelles conditions de remboursement avec vos créanciers en votre nom.",
+          "ClearPath est un outil de planification, pas un conseiller en dettes agréé, et rien ici ne constitue un conseil juridique ou financier. Si vos remboursements semblent ingérables, un conseiller en dettes agréé ou le régulateur compétent de votre pays peut vous aider à savoir si cette démarche convient à votre situation.",
+        ],
+      },
+      affordability: {
+        title: 'Comment évaluer si un plan de remboursement est abordable',
+        body: [
+          "Un point de départ simple : additionnez vos dépenses mensuelles essentielles — loyer, alimentation, transport, assurances — et vos paiements minimums de dette requis, puis soustrayez le tout de votre revenu mensuel.",
+          "Si ce qu'il reste est faible ou négatif, votre plan actuel pourrait réellement mettre votre budget sous pression, même si vous êtes techniquement à jour sur chaque paiement.",
+          "La Vérification d'abordabilité de ClearPath fait ce calcul automatiquement et signale quand vos paiements minimums occupent une grande part de ce qui est disponible, afin que vous le voyiez avant de décider d'ajouter un supplément.",
+        ],
+      },
+      emergencyBuffer: {
+        title: "Constituer une petite réserve d'urgence en remboursant vos dettes",
+        body: [
+          "Consacrer chaque euro disponible à la dette semble efficace, mais sans aucune réserve, une seule dépense imprévue — une réparation automobile, une facture médicale — finit souvent de nouveau sur une carte de crédit, annulant une partie de ces progrès.",
+          "Beaucoup de gens trouvent utile de constituer d'abord une petite réserve — même un montant modeste — avant d'accélérer agressivement le remboursement des dettes, uniquement pour absorber l'imprévu sans se réendetter.",
+          "Il n'existe pas de règle fixe sur la taille que doit avoir une réserve ; cela dépend de votre situation. L'idée est l'équilibre — un peu de marge peut rendre un plan de remboursement plus facile à tenir en pratique.",
+        ],
+      },
+    },
+  },
   onboarding: {
     stepOf: (step, total) => `Étape ${step} sur ${total}`,
     back: 'Retour',
