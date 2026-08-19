@@ -10,6 +10,12 @@ import Reminders from './components/Reminders'
 import PayoffCalendar from './components/PayoffCalendar'
 import AchievementBadges from './components/AchievementBadges'
 import Milestones from './components/Milestones'
+import DebtFreeHero from './components/DebtFreeHero'
+import Simulator from './components/Simulator'
+import Recommendation from './components/Recommendation'
+import Affordability from './components/Affordability'
+import AssumptionsPanel from './components/AssumptionsPanel'
+import OnboardingWizard, { type OnboardingResult } from './components/OnboardingWizard'
 import CurrencySelector from './components/CurrencySelector'
 import LanguageSelector from './components/LanguageSelector'
 import AccountMenu from './components/AccountMenu'
@@ -18,7 +24,7 @@ import AuthModal from './components/AuthModal'
 const PayoffChart = lazy(() => import('./components/PayoffChart'))
 import ThemeToggle from './components/ThemeToggle'
 import Confetti from './components/Confetti'
-import { makeId, simulatePayoff, totalBalance, totalMinPayment, type Debt, type Strategy } from './lib/payoff'
+import { makeId, simulatePayoff, totalMinPayment, type Debt, type Strategy } from './lib/payoff'
 import { loadState, saveState, SAMPLE_DEBTS } from './lib/storage'
 import { guessCurrencyFromLocale } from './lib/currencies'
 import { guessLocaleFromBrowser, LANGUAGE_META, TRANSLATIONS, type Locale } from './lib/i18n'
@@ -43,9 +49,9 @@ import {
 
 const DEFAULTS = {
   debts: [] as Debt[],
-  monthlyIncome: 4500,
-  fixedExpenses: 2200,
-  extraPayment: 150,
+  monthlyIncome: 0,
+  fixedExpenses: 0,
+  extraPayment: 0,
   strategy: 'avalanche' as Strategy,
   priorityOrder: [] as string[],
   theme: 'light' as 'light' | 'dark',
@@ -88,8 +94,9 @@ export default function App() {
   const [debtsPaidOffCount, setDebtsPaidOffCount] = useState(saved?.debtsPaidOffCount ?? 0)
   const [hasEditedBudget, setHasEditedBudget] = useState(saved?.hasEditedBudget ?? false)
   const [hasExplored, setHasExplored] = useState(saved?.hasExplored ?? false)
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(saved?.hasCompletedOnboarding ?? false)
 
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle')
   const cloudDebtsRef = useRef<Debt[]>(debts)
@@ -126,6 +133,7 @@ export default function App() {
       debtsPaidOffCount,
       hasEditedBudget,
       hasExplored,
+      hasCompletedOnboarding,
     })
   }, [
     debts,
@@ -144,6 +152,7 @@ export default function App() {
     debtsPaidOffCount,
     hasEditedBudget,
     hasExplored,
+    hasCompletedOnboarding,
   ])
 
   function currentSettings(): CloudSettings {
@@ -189,6 +198,7 @@ export default function App() {
           cloudDebtsRef.current = cloudDebts
           setPayments(cloudPayments)
           setScenarios(cloudScenarios)
+          setHasCompletedOnboarding(true)
           if (cloudSettings) {
             setMonthlyIncome(cloudSettings.monthlyIncome)
             setFixedExpenses(cloudSettings.fixedExpenses)
@@ -249,8 +259,8 @@ export default function App() {
   ])
 
   const minPayment = totalMinPayment(debts)
-  const originalTotal = totalBalance(debts)
   const budget = minPayment + extraPayment
+  const simulatorSliderMax = Math.max(500, Math.round((monthlyIncome - fixedExpenses - minPayment) / 10) * 10 || 500)
 
   const avalanche = useMemo(() => simulatePayoff(debts, 'avalanche', budget), [debts, budget])
   const snowball = useMemo(() => simulatePayoff(debts, 'snowball', budget), [debts, budget])
@@ -339,8 +349,19 @@ export default function App() {
     setExtraPayment(DEFAULTS.extraPayment)
     setStrategy(DEFAULTS.strategy)
     setPriorityOrder([])
+    setHasCompletedOnboarding(false)
     for (const p of payments) if (user) deletePaymentRemote(user.id, p.id).catch(() => {})
     setPayments([])
+  }
+
+  function handleOnboardingComplete(result: OnboardingResult) {
+    setMonthlyIncome(result.monthlyIncome)
+    setFixedExpenses(result.fixedExpenses)
+    setExtraPayment(result.extraPayment)
+    handleSelectStrategy(result.strategy)
+    handleDebtsChange(result.debts)
+    setHasEditedBudget(true)
+    setHasCompletedOnboarding(true)
   }
 
   const achievementSignals: AchievementSignals = {
@@ -354,6 +375,8 @@ export default function App() {
     isSignedIn: Boolean(user),
     scenarioCount: scenarios.length,
   }
+
+  const showOnboarding = !authLoading && !hasCompletedOnboarding && debts.length === 0
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900 dark:from-slate-950 dark:to-slate-900 dark:text-slate-100">
@@ -371,12 +394,14 @@ export default function App() {
           <div className="flex items-center gap-2">
             <LanguageSelector value={language} onChange={handleLanguageChange} t={t} />
             <CurrencySelector value={currency} onChange={handleCurrencyChange} t={t} compact />
-            <button
-              onClick={resetAll}
-              className="hidden items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-700 sm:inline-flex dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-            >
-              <RotateCcw size={13} /> {t.app.startOver}
-            </button>
+            {!showOnboarding && (
+              <button
+                onClick={resetAll}
+                className="hidden items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-700 sm:inline-flex dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              >
+                <RotateCcw size={13} /> {t.app.startOver}
+              </button>
+            )}
             {isCloudConfigured && (
               <AccountMenu
                 user={user}
@@ -391,110 +416,151 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <div className="mb-8 animate-rise">
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t.app.title}</h1>
-          <p className="mt-2 max-w-2xl text-slate-500 dark:text-slate-400">{t.app.subtitle}</p>
-        </div>
+      {showOnboarding ? (
+        <OnboardingWizard
+          currency={currency}
+          locale={dateLocale}
+          t={t}
+          onComplete={handleOnboardingComplete}
+          onSkip={() => setHasCompletedOnboarding(true)}
+          onRequestAuth={() => setShowAuthModal(true)}
+        />
+      ) : (
+        <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+          {debts.length === 0 && (
+            <div className="mb-8 animate-rise">
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t.app.title}</h1>
+              <p className="mt-2 max-w-2xl text-slate-500 dark:text-slate-400">{t.app.subtitle}</p>
+            </div>
+          )}
 
-        <div className="mb-6">
-          <AchievementBadges signals={achievementSignals} t={t} />
-        </div>
+          {debts.length > 0 && (
+            <div className="mb-6">
+              <DebtFreeHero debts={debts} payments={payments} result={selected} currency={currency} locale={dateLocale} t={t} />
+            </div>
+          )}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-          <div className="space-y-6 lg:col-span-2">
-            <BudgetPanel
-              monthlyIncome={monthlyIncome}
-              fixedExpenses={fixedExpenses}
-              extraPayment={extraPayment}
-              totalMinPayment={minPayment}
-              currency={currency}
-              locale={dateLocale}
-              t={t}
-              onChange={handleBudgetChange}
-            />
-            <DebtsPanel
-              debts={debts}
-              currency={currency}
-              locale={dateLocale}
-              t={t}
-              onChange={handleDebtsChange}
-              onLoadSample={() => handleDebtsChange(SAMPLE_DEBTS.map((d) => ({ ...d, id: makeId() })))}
-            />
-            <Reminders debts={debts} payments={payments} t={t} onMarkPaid={handleMarkPaid} />
-            {debts.some((d) => d.dueDay) && <PayoffCalendar debts={debts} t={t} locale={dateLocale} />}
-          </div>
-
-          <div className="space-y-6 lg:col-span-3">
-            {debts.length > 0 ? (
-              <>
-                <StrategyPicker
-                  strategy={strategy}
-                  onSelect={handleSelectStrategy}
-                  avalanche={avalanche}
-                  snowball={snowball}
-                  custom={custom}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+            <div className="space-y-6 lg:col-span-2">
+              <BudgetPanel
+                monthlyIncome={monthlyIncome}
+                fixedExpenses={fixedExpenses}
+                extraPayment={extraPayment}
+                totalMinPayment={minPayment}
+                currency={currency}
+                locale={dateLocale}
+                t={t}
+                onChange={handleBudgetChange}
+              />
+              <DebtsPanel
+                debts={debts}
+                currency={currency}
+                locale={dateLocale}
+                t={t}
+                onChange={handleDebtsChange}
+                onLoadSample={() => handleDebtsChange(SAMPLE_DEBTS.map((d) => ({ ...d, id: makeId() })))}
+              />
+              {debts.length > 0 && (
+                <Affordability
+                  monthlyIncome={monthlyIncome}
+                  fixedExpenses={fixedExpenses}
+                  totalMinPayment={minPayment}
                   currency={currency}
                   locale={dateLocale}
                   t={t}
                 />
-                {strategy === 'custom' && (
-                  <PriorityList debts={debts} order={custom.order} onReorder={setPriorityOrder} t={t} />
-                )}
-                <ScenarioManager
-                  debts={debts}
-                  scenarios={scenarios}
-                  currentExtraPayment={extraPayment}
-                  currentStrategy={strategy}
-                  currentPriorityOrder={priorityOrder}
-                  currency={currency}
-                  locale={dateLocale}
-                  t={t}
-                  onSave={handleSaveScenario}
-                  onApply={handleApplyScenario}
-                  onDelete={handleDeleteScenario}
-                />
-                <SummaryCards result={selected} baseline={baseline} currency={currency} locale={dateLocale} t={t} />
-                <Suspense
-                  fallback={
-                    <div className="flex h-72 items-center justify-center rounded-2xl border border-slate-200 text-sm text-slate-400 dark:border-slate-800">
-                      Loading chart…
-                    </div>
-                  }
-                >
-                  <PayoffChart
-                    avalanche={avalanche}
-                    snowball={snowball}
-                    custom={custom}
-                    strategy={strategy}
+              )}
+              <Reminders debts={debts} payments={payments} t={t} onMarkPaid={handleMarkPaid} />
+              {debts.some((d) => d.dueDay) && <PayoffCalendar debts={debts} t={t} locale={dateLocale} />}
+            </div>
+
+            <div className="space-y-6 lg:col-span-3">
+              {debts.length > 0 ? (
+                <>
+                  <Recommendation avalanche={avalanche} snowball={snowball} currency={currency} locale={dateLocale} t={t} />
+                  <Simulator
+                    extraPayment={extraPayment}
+                    onExtraPaymentChange={(v) => handleBudgetChange({ extraPayment: v })}
+                    sliderMax={simulatorSliderMax}
+                    selected={selected}
+                    baseline={baseline}
                     currency={currency}
                     locale={dateLocale}
                     t={t}
                   />
-                </Suspense>
-                <Milestones
-                  debts={debts}
-                  result={selected}
-                  originalTotal={originalTotal}
-                  strategy={strategy}
-                  currency={currency}
-                  locale={dateLocale}
-                  t={t}
-                  onCelebrate={() => setConfettiTrigger((n) => n + 1)}
-                  onExport={() => setHasDownloadedReport(true)}
-                />
-              </>
-            ) : (
-              <div className="flex h-full min-h-[300px] items-center justify-center rounded-2xl border border-dashed border-slate-300 p-10 text-center dark:border-slate-700">
-                <div>
-                  <p className="text-lg font-medium text-slate-600 dark:text-slate-300">{t.app.emptyTitle}</p>
-                  <p className="mt-1 text-sm text-slate-400">{t.app.emptySubtitle}</p>
+                  <StrategyPicker
+                    strategy={strategy}
+                    onSelect={handleSelectStrategy}
+                    avalanche={avalanche}
+                    snowball={snowball}
+                    custom={custom}
+                    currency={currency}
+                    locale={dateLocale}
+                    t={t}
+                  />
+                  {strategy === 'custom' && (
+                    <PriorityList debts={debts} order={custom.order} onReorder={setPriorityOrder} t={t} />
+                  )}
+                  <SummaryCards result={selected} baseline={baseline} currency={currency} locale={dateLocale} t={t} />
+                  <Suspense
+                    fallback={
+                      <div className="flex h-72 items-center justify-center rounded-2xl border border-slate-200 text-sm text-slate-400 dark:border-slate-800">
+                        Loading chart…
+                      </div>
+                    }
+                  >
+                    <PayoffChart
+                      avalanche={avalanche}
+                      snowball={snowball}
+                      custom={custom}
+                      strategy={strategy}
+                      currency={currency}
+                      locale={dateLocale}
+                      t={t}
+                    />
+                  </Suspense>
+                  <Milestones
+                    debts={debts}
+                    result={selected}
+                    originalTotal={debts.reduce((sum, d) => sum + d.balance, 0)}
+                    strategy={strategy}
+                    currency={currency}
+                    locale={dateLocale}
+                    t={t}
+                    onCelebrate={() => setConfettiTrigger((n) => n + 1)}
+                    onExport={() => setHasDownloadedReport(true)}
+                  />
+                  <ScenarioManager
+                    debts={debts}
+                    scenarios={scenarios}
+                    currentExtraPayment={extraPayment}
+                    currentStrategy={strategy}
+                    currentPriorityOrder={priorityOrder}
+                    currency={currency}
+                    locale={dateLocale}
+                    t={t}
+                    onSave={handleSaveScenario}
+                    onApply={handleApplyScenario}
+                    onDelete={handleDeleteScenario}
+                  />
+                  <AssumptionsPanel t={t} />
+                </>
+              ) : (
+                <div className="flex h-full min-h-[300px] items-center justify-center rounded-2xl border border-dashed border-slate-300 p-10 text-center dark:border-slate-700">
+                  <div>
+                    <p className="text-lg font-medium text-slate-600 dark:text-slate-300">{t.app.emptyTitle}</p>
+                    <p className="mt-1 text-sm text-slate-400">{t.app.emptySubtitle}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </main>
+
+          <div className="mt-6">
+            <AchievementBadges signals={achievementSignals} t={t} />
+          </div>
+        </main>
+      )}
 
       <footer className="mt-12 border-t border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
         {t.app.footer}

@@ -26,7 +26,6 @@ export default function BudgetPanel({
 }: Props) {
   const totalDebtBudget = totalMinPayment + extraPayment
   const leftover = monthlyIncome - fixedExpenses - totalDebtBudget
-  const sliderMax = Math.max(500, Math.round((monthlyIncome - fixedExpenses - totalMinPayment) / 10) * 10 || 500)
   const symbol = getCurrencySymbol(currency)
 
   return (
@@ -70,30 +69,17 @@ export default function BudgetPanel({
         </label>
       </div>
 
-      <div className="mt-5">
-        <div className="mb-1 flex items-baseline justify-between">
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{t.budget.extraToward}</span>
-          <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-            {formatCurrency(extraPayment, currency, locale)}
-          </span>
-        </div>
-        <input
-          type="range"
-          min={0}
-          max={sliderMax}
-          step={10}
-          value={Math.min(extraPayment, sliderMax)}
-          onChange={(e) => onChange({ extraPayment: Number(e.target.value) })}
-          className="w-full accent-emerald-500"
-        />
-        <p className="mt-1 text-xs text-slate-400">{t.budget.extraHint}</p>
-      </div>
-
       <dl className="mt-5 space-y-2 rounded-xl bg-slate-50 p-4 text-sm dark:bg-slate-800/60">
         <div className="flex justify-between">
           <dt className="text-slate-500 dark:text-slate-400">{t.budget.requiredMinimums}</dt>
           <dd className="font-medium text-slate-800 dark:text-slate-100">
             {formatCurrency(totalMinPayment, currency, locale)}
+          </dd>
+        </div>
+        <div className="flex justify-between">
+          <dt className="text-slate-500 dark:text-slate-400">{t.budget.extraToward}</dt>
+          <dd className="font-medium text-slate-800 dark:text-slate-100">
+            {formatCurrency(extraPayment, currency, locale)}
           </dd>
         </div>
         <div className="flex justify-between">
@@ -110,6 +96,7 @@ export default function BudgetPanel({
         </div>
       </dl>
       {leftover < 0 && <p className="mt-2 text-xs text-rose-500">{t.budget.negativeWarning}</p>}
+      <p className="mt-2 text-xs text-slate-400">{t.simulator.heading} ↓</p>
     </section>
   )
 }

@@ -22,6 +22,7 @@ export interface AppState {
   debtsPaidOffCount: number
   hasEditedBudget: boolean
   hasExplored: boolean
+  hasCompletedOnboarding: boolean
 }
 
 const KEY = 'clearpath.v1'
@@ -45,8 +46,8 @@ export function saveState(state: AppState) {
 }
 
 export const SAMPLE_DEBTS: Debt[] = [
-  { id: 'sample-1', name: 'Visa Card', category: 'credit-card', balance: 4200, apr: 24.99, minPayment: 120, dueDay: 5 },
-  { id: 'sample-2', name: 'Student Loan', category: 'student-loan', balance: 18500, apr: 5.5, minPayment: 210, dueDay: 15 },
-  { id: 'sample-3', name: 'Car Loan', category: 'auto-loan', balance: 9800, apr: 7.2, minPayment: 260, dueDay: 1 },
-  { id: 'sample-4', name: 'Store Card', category: 'credit-card', balance: 1150, apr: 27.99, minPayment: 45, dueDay: 22 },
+  { id: 'sample-1', name: 'Credit Card', category: 'credit-card', balance: 4200, originalBalance: 5000, apr: 24.99, minPayment: 120, dueDay: 5 },
+  { id: 'sample-2', name: 'Student Loan', category: 'student-loan', balance: 18500, originalBalance: 20000, apr: 5.5, minPayment: 210, dueDay: 15 },
+  { id: 'sample-3', name: 'Vehicle Finance', category: 'auto-loan', balance: 9800, originalBalance: 12000, apr: 7.2, minPayment: 260, dueDay: 1 },
+  { id: 'sample-4', name: 'Store Account', category: 'store-account', balance: 1150, originalBalance: 1800, apr: 27.99, minPayment: 45, dueDay: 22 },
 ]

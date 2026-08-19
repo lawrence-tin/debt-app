@@ -1,9 +1,13 @@
 export type DebtCategory =
   | 'credit-card'
-  | 'student-loan'
-  | 'auto-loan'
   | 'personal-loan'
+  | 'auto-loan' // labeled "Vehicle Finance" — South African terminology
+  | 'store-account'
+  | 'overdraft'
+  | 'home-loan'
+  | 'student-loan'
   | 'medical'
+  | 'family-friend'
   | 'other'
 
 export interface Debt {
@@ -15,6 +19,21 @@ export interface Debt {
   minPayment: number
   /** Day of the month (1-31) the payment is due. Optional — powers reminders. */
   dueDay?: number
+  /** Balance at the moment this debt was first added — the baseline real progress is measured against. */
+  originalBalance?: number
+}
+
+/** Real (not projected) progress made on a set of debts, from each one's originalBalance to its current balance. */
+export function realProgress(debts: Debt[]): { paidOff: number; original: number; percent: number } {
+  let paidOff = 0
+  let original = 0
+  for (const d of debts) {
+    const start = d.originalBalance ?? d.balance
+    original += start
+    paidOff += Math.max(0, start - d.balance)
+  }
+  const percent = original > 0 ? Math.round((paidOff / original) * 100) : 0
+  return { paidOff, original, percent }
 }
 
 export type Strategy = 'avalanche' | 'snowball' | 'custom'
@@ -188,10 +207,14 @@ export function formatCurrency(
 /** Emoji shown next to each debt category; human-readable labels live in the i18n translations. */
 export const CATEGORY_EMOJI: Record<DebtCategory, string> = {
   'credit-card': '💳',
-  'student-loan': '🎓',
-  'auto-loan': '🚗',
   'personal-loan': '🏦',
+  'auto-loan': '🚗',
+  'store-account': '🛍️',
+  overdraft: '🏧',
+  'home-loan': '🏠',
+  'student-loan': '🎓',
   medical: '🩺',
+  'family-friend': '🤝',
   other: '📄',
 }
 

@@ -30,3 +30,9 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Generated project documentation (local deliverable, not repo source)
+ClearPath-Documentation.pdf
+
+# Uploaded product spec (business input doc, not repo source)
+ClearPath_South_Africa_Product_Specification.pdf

@@ -11,6 +11,7 @@ create table if not exists public.debts (
   name text not null,
   category text not null default 'other',
   balance numeric not null default 0,
+  original_balance numeric,
   apr numeric not null default 0,
   min_payment numeric not null default 0,
   due_day smallint,
@@ -20,6 +21,7 @@ create table if not exists public.debts (
 
 -- Existing installs: add columns introduced after the initial release.
 alter table public.debts add column if not exists due_day smallint;
+alter table public.debts add column if not exists original_balance numeric;
 
 create index if not exists debts_user_id_idx on public.debts (user_id);
 

@@ -170,6 +170,75 @@ export interface Translation {
     months: (n: number) => string
     zero: string
   }
+  hero: {
+    debtRemaining: string
+    progress: (percent: number) => string
+    paymentTarget: string
+    paidThisMonth: string
+    nextMilestoneLabel: string
+  }
+  simulator: {
+    heading: string
+    subheading: string
+    examplePrompt: (amount: string) => string
+    monthsSaved: (n: string) => string
+    newDebtFreeDate: string
+  }
+  recommendation: {
+    heading: string
+    saves: (cheaper: string, amount: string, other: string) => string
+    equal: string
+    reasoningAvalanche: string
+    reasoningSnowball: string
+    disclaimer: string
+  }
+  affordability: {
+    heading: string
+    subheading: string
+    availableLabel: string
+    onTrackTitle: string
+    onTrackDesc: string
+    underPressureTitle: string
+    underPressureDesc: string
+    unaffordableTitle: string
+    unaffordableDesc: string
+    neutralGuidance: string
+  }
+  assumptions: {
+    heading: string
+    items: [string, string, string, string, string, string]
+  }
+  onboarding: {
+    stepOf: (step: number, total: number) => string
+    back: string
+    next: string
+    skipToDashboard: string
+    welcomeTitle: string
+    welcomeSubtitle: string
+    getStarted: string
+    incomeTitle: string
+    incomeSubtitle: string
+    expensesTitle: string
+    expensesSubtitle: string
+    debtsTitle: string
+    debtsSubtitle: string
+    debtsContinue: string
+    debtsNeedOne: string
+    calculatingTitle: string
+    calculatingSubtitle: string
+    revealTitle: string
+    revealSubtitle: string
+    revealContinue: string
+    compareTitle: string
+    compareSubtitle: string
+    optimizeTitle: string
+    optimizeSubtitle: string
+    commitTitle: string
+    commitSubtitle: string
+    commitLocal: string
+    commitAccount: string
+    goToDashboard: string
+  }
   auth: {
     signIn: string
     signUp: string

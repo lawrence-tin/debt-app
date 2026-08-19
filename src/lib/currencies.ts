@@ -6,8 +6,8 @@ export interface Currency {
   flag: string
 }
 
-/** Currency codes shown at the top of the picker, ahead of the A-Z list. */
-export const POPULAR_CURRENCY_CODES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'INR', 'CNY', 'CHF', 'NZD']
+/** Currency codes shown at the top of the picker, ahead of the A-Z list. ZAR leads — ClearPath is South Africa-first. */
+export const POPULAR_CURRENCY_CODES = ['ZAR', 'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'INR', 'CNY', 'CHF']
 
 const BY_CODE: Record<string, Currency> = {}
 
@@ -33,7 +33,9 @@ const REGION_TO_CURRENCY: Record<string, string> = {
 }
 
 export function guessCurrencyFromLocale(): string {
-  if (typeof navigator === 'undefined') return 'USD'
+  // ClearPath is South Africa-first — ZAR is the default unless the visitor's browser
+  // locale clearly points to another supported region.
+  if (typeof navigator === 'undefined') return 'ZAR'
   for (const locale of navigator.languages ?? [navigator.language]) {
     try {
       const region = new Intl.Locale(locale).maximize().region
@@ -42,7 +44,7 @@ export function guessCurrencyFromLocale(): string {
       // ignore unparseable locale
     }
   }
-  return 'USD'
+  return 'ZAR'
 }
 
 export const CURRENCIES: Currency[] = [

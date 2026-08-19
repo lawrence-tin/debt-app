@@ -50,6 +50,7 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
         name: draft.name,
         category: draft.category,
         balance,
+        originalBalance: balance,
         apr: apr || 0,
         minPayment,
         dueDay: dueDay >= 1 && dueDay <= 31 ? dueDay : undefined,

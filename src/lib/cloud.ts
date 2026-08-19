@@ -22,6 +22,7 @@ interface DebtRow {
   name: string
   category: DebtCategory
   balance: number
+  original_balance: number | null
   apr: number
   min_payment: number
   due_day: number | null
@@ -62,6 +63,7 @@ function rowToDebt(row: DebtRow): Debt {
     name: row.name,
     category: row.category,
     balance: row.balance,
+    originalBalance: row.original_balance ?? undefined,
     apr: row.apr,
     minPayment: row.min_payment,
     dueDay: row.due_day ?? undefined,
@@ -75,6 +77,7 @@ function debtToRow(userId: string, debt: Debt) {
     name: debt.name,
     category: debt.category,
     balance: debt.balance,
+    original_balance: debt.originalBalance ?? debt.balance,
     apr: debt.apr,
     min_payment: debt.minPayment,
     due_day: debt.dueDay ?? null,
@@ -136,6 +139,7 @@ export async function updateDebtRemote(userId: string, debt: Debt): Promise<void
       name: debt.name,
       category: debt.category,
       balance: debt.balance,
+      original_balance: debt.originalBalance ?? debt.balance,
       apr: debt.apr,
       min_payment: debt.minPayment,
       due_day: debt.dueDay ?? null,

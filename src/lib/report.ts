@@ -110,11 +110,36 @@ export async function downloadPayoffReportPdf({ debts, result, strategy, currenc
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const finalY = (doc as any).lastAutoTable?.finalY ?? y
+  let afterTablesY = (doc as any).lastAutoTable?.finalY ?? y
+
+  // Assumptions — start a fresh page if what's left won't comfortably fit.
+  const pageHeight = doc.internal.pageSize.getHeight()
+  if (afterTablesY + 160 > pageHeight - margin) {
+    doc.addPage()
+    afterTablesY = margin
+  } else {
+    afterTablesY += 24
+  }
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.setTextColor(15, 23, 42)
+  doc.text(t.assumptions.heading, margin, afterTablesY)
+  afterTablesY += 16
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8.5)
+  doc.setTextColor(100, 116, 139)
+  for (const item of t.assumptions.items) {
+    const lines = doc.splitTextToSize(`•  ${item}`, 595 - margin * 2)
+    doc.text(lines, margin, afterTablesY)
+    afterTablesY += lines.length * 11 + 3
+  }
+
   doc.setFont('helvetica', 'italic')
   doc.setFontSize(8)
   doc.setTextColor(148, 163, 184)
-  doc.text(t.report.disclaimer, margin, finalY + 24, { maxWidth: 595 - margin * 2 })
+  doc.text(t.report.disclaimer, margin, afterTablesY + 12, { maxWidth: 595 - margin * 2 })
 
   doc.save('clearpath-debt-report.pdf')
 }

@@ -68,3 +68,11 @@ export function buildReminders(debts: Debt[], payments: Payment[], from: Date = 
     })
     .sort((a, b) => a.daysUntilDue - b.daysUntilDue)
 }
+
+/** How many debts have a payment due this calendar month, and how many of those are already logged as paid. */
+export function monthlyPaymentCount(debts: Debt[], payments: Payment[], from: Date = new Date()): { target: number; paid: number } {
+  const period = periodKey(from)
+  const withDueDay = debts.filter((d) => d.dueDay && d.balance > 0)
+  const paid = withDueDay.filter((d) => isPaidForPeriod(payments, d.id, period)).length
+  return { target: withDueDay.length, paid }
+}
