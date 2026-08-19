@@ -28,6 +28,12 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
   const symbol = getCurrencySymbol(currency)
   const [draft, setDraft] = useState(emptyDraft)
   const [showForm, setShowForm] = useState(debts.length === 0)
+  const [showError, setShowError] = useState(false)
+
+  function updateDraft(patch: Partial<typeof emptyDraft>) {
+    setDraft((d) => ({ ...d, ...patch }))
+    setShowError(false)
+  }
 
   function updateDebt(id: string, patch: Partial<Debt>) {
     onChange(debts.map((d) => (d.id === id ? { ...d, ...patch } : d)))
@@ -37,12 +43,20 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
     onChange(debts.filter((d) => d.id !== id))
   }
 
+  const nameInvalid = showError && !draft.name
+  const balanceInvalid = showError && !(Number(draft.balance) > 0)
+  const minPaymentInvalid = showError && !(Number(draft.minPayment) > 0)
+  const invalidRing = 'ring-2 ring-rose-400 border-rose-400 dark:border-rose-500'
+
   function addDebt() {
     const balance = Number(draft.balance)
     const apr = Number(draft.apr)
     const minPayment = Number(draft.minPayment)
     const dueDay = Number(draft.dueDay)
-    if (!draft.name || !(balance > 0) || !(minPayment > 0)) return
+    if (!draft.name || !(balance > 0) || !(minPayment > 0)) {
+      setShowError(true)
+      return
+    }
     onChange([
       ...debts,
       {
@@ -57,6 +71,7 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
       },
     ])
     setDraft(emptyDraft)
+    setShowError(false)
   }
 
   return (
@@ -185,13 +200,14 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
           <div className="grid grid-cols-2 gap-3">
             <input
               value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              onChange={(e) => updateDraft({ name: e.target.value })}
               placeholder={t.debts.addNamePlaceholder}
-              className="col-span-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+              aria-invalid={nameInvalid}
+              className={`col-span-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white ${nameInvalid ? invalidRing : ''}`}
             />
             <select
               value={draft.category}
-              onChange={(e) => setDraft({ ...draft, category: e.target.value as DebtCategory })}
+              onChange={(e) => updateDraft({ category: e.target.value as DebtCategory })}
               className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
             >
               {DEBT_CATEGORIES.map((key) => (
@@ -200,13 +216,16 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
                 </option>
               ))}
             </select>
-            <div className="flex items-center rounded-lg border border-slate-200 bg-white px-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900">
+            <div
+              className={`flex items-center rounded-lg border border-slate-200 bg-white px-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 ${balanceInvalid ? invalidRing : ''}`}
+            >
               <span className="mr-1 text-slate-400">{symbol}</span>
               <input
                 type="number"
                 placeholder={t.debts.balance}
                 value={draft.balance}
-                onChange={(e) => setDraft({ ...draft, balance: e.target.value })}
+                onChange={(e) => updateDraft({ balance: e.target.value })}
+                aria-invalid={balanceInvalid}
                 className="w-full bg-transparent py-1.5 text-sm text-slate-900 outline-none dark:text-white"
               />
             </div>
@@ -215,16 +234,19 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
               step="0.01"
               placeholder={t.debts.apr}
               value={draft.apr}
-              onChange={(e) => setDraft({ ...draft, apr: e.target.value })}
+              onChange={(e) => updateDraft({ apr: e.target.value })}
               className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
             />
-            <div className="flex items-center rounded-lg border border-slate-200 bg-white px-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900">
+            <div
+              className={`flex items-center rounded-lg border border-slate-200 bg-white px-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 ${minPaymentInvalid ? invalidRing : ''}`}
+            >
               <span className="mr-1 text-slate-400">{symbol}</span>
               <input
                 type="number"
                 placeholder={t.debts.minPayment}
                 value={draft.minPayment}
-                onChange={(e) => setDraft({ ...draft, minPayment: e.target.value })}
+                onChange={(e) => updateDraft({ minPayment: e.target.value })}
+                aria-invalid={minPaymentInvalid}
                 className="w-full bg-transparent py-1.5 text-sm text-slate-900 outline-none dark:text-white"
               />
             </div>
@@ -235,10 +257,11 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
               placeholder={t.debts.dueDay}
               title={t.debts.dueDayHint}
               value={draft.dueDay}
-              onChange={(e) => setDraft({ ...draft, dueDay: e.target.value })}
+              onChange={(e) => updateDraft({ dueDay: e.target.value })}
               className="col-span-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
             />
           </div>
+          {showError && <p className="mt-2 text-xs font-medium text-rose-500">{t.debts.addValidation}</p>}
           <div className="mt-3 flex gap-2">
             <button
               onClick={addDebt}
@@ -248,7 +271,10 @@ export default function DebtsPanel({ debts, currency, locale, t, onChange, onLoa
             </button>
             {debts.length > 0 && (
               <button
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShowForm(false)
+                  setShowError(false)
+                }}
                 className="rounded-lg px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               >
                 {t.debts.cancel}

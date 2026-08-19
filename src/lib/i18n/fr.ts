@@ -42,6 +42,7 @@ export const fr: Translation = {
     dueDayHint: 'Jour du mois, 1–31',
     addNamePlaceholder: 'Nom (ex. Carte Visa)',
     addDebt: 'Ajouter une dette',
+    addValidation: 'Saisissez un nom, un solde et un paiement minimum avant d’ajouter cette dette.',
     cancel: 'Annuler',
     addAnother: 'Ajouter une autre dette',
     remove: (name) => `Supprimer ${name}`,

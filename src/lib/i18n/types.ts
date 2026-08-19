@@ -43,6 +43,7 @@ export interface Translation {
     dueDayHint: string
     addNamePlaceholder: string
     addDebt: string
+    addValidation: string
     cancel: string
     addAnother: string
     remove: (name: string) => string
