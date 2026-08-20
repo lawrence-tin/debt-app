@@ -17,7 +17,6 @@ import Recommendation from './components/Recommendation'
 import Affordability from './components/Affordability'
 import AssumptionsPanel from './components/AssumptionsPanel'
 import OnboardingWizard, { type OnboardingResult } from './components/OnboardingWizard'
-import CurrencySelector from './components/CurrencySelector'
 import LanguageSelector from './components/LanguageSelector'
 import AccountMenu from './components/AccountMenu'
 import AuthModal from './components/AuthModal'
@@ -32,7 +31,6 @@ import { makeId, simulatePayoff, totalMinPayment, type Debt, type Strategy } fro
 import { captureBaseline, type PlanBaseline } from './lib/checkIn'
 import { trackEvent } from './lib/analytics'
 import { loadState, saveState, SAMPLE_DEBTS } from './lib/storage'
-import { guessCurrencyFromLocale } from './lib/currencies'
 import { guessLocaleFromBrowser, LANGUAGE_META, TRANSLATIONS, type Locale } from './lib/i18n'
 import { isCloudConfigured } from './lib/supabase'
 import { signOut as authSignOut, useAuth } from './lib/useAuth'
@@ -89,7 +87,8 @@ export default function App() {
     reconcilePriorityOrder(saved?.priorityOrder ?? DEFAULTS.priorityOrder, saved?.debts ?? DEFAULTS.debts),
   )
   const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme())
-  const [currency, setCurrency] = useState<string>(saved?.currency ?? guessCurrencyFromLocale())
+  // ClearPath is South Africa-only — ZAR is the only currency, no picker needed.
+  const currency = 'ZAR'
   const [language, setLanguage] = useState<Locale>(saved?.language ?? guessLocaleFromBrowser())
   const [confettiTrigger, setConfettiTrigger] = useState(0)
 
@@ -220,7 +219,6 @@ export default function App() {
             setExtraPayment(cloudSettings.extraPayment)
             setStrategy(cloudSettings.strategy)
             setPriorityOrder(reconcilePriorityOrder(cloudSettings.priorityOrder, cloudDebts))
-            setCurrency(cloudSettings.currency)
             setLanguage(cloudSettings.language)
             setTheme(cloudSettings.theme)
             setTriedStrategies(cloudSettings.triedStrategies.length > 0 ? cloudSettings.triedStrategies : [strategy])
@@ -360,11 +358,6 @@ export default function App() {
     setHasEditedBudget(true)
   }
 
-  function handleCurrencyChange(next: string) {
-    setCurrency(next)
-    setHasExplored(true)
-  }
-
   function handleLanguageChange(next: Locale) {
     setLanguage(next)
     setHasExplored(true)
@@ -463,7 +456,6 @@ export default function App() {
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <LanguageSelector value={language} onChange={handleLanguageChange} t={t} />
-            <CurrencySelector value={currency} onChange={handleCurrencyChange} t={t} compact />
             <button
               onClick={() => setShowPricing(true)}
               className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/20"

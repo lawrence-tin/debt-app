@@ -30,8 +30,8 @@ to your own account (backed by Supabase) so they follow you across devices.
   strategy, or paying off a debt entirely
 - One-click PDF report of your full payoff plan, plus a CSV export of your
   debts that opens directly in Excel/Sheets
-- Every currency (160 ISO codes, with flags) and three languages (English,
-  Español, Français)
+- South Africa-only: ZAR is the sole currency, in English, isiZulu, and
+  Afrikaans
 - Light/dark theme toggle
 - **Optional account (email/password)** — register to sync your debts and
   budget settings to the cloud; works fully anonymously without one

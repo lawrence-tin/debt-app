@@ -61,7 +61,7 @@ export const en: Translation = {
   },
   strategy: {
     heading: 'Choose your strategy',
-    subheading: 'Both use every dollar of your budget — they just target debts in a different order.',
+    subheading: 'Both use every rand of your budget — they just target debts in a different order.',
     avalancheTitle: 'Avalanche',
     avalancheDesc: 'Highest interest rate first — mathematically the cheapest.',
     snowballTitle: 'Snowball',
@@ -110,7 +110,7 @@ export const en: Translation = {
     heading: 'What-if scenarios',
     subheading: 'Save different budgets or strategies and compare them side by side.',
     saveCurrent: 'Save current plan as scenario',
-    namePlaceholder: 'Scenario name (e.g. "Extra $50/mo")',
+    namePlaceholder: 'Scenario name (e.g. "Extra R50/mo")',
     save: 'Save',
     cancel: 'Cancel',
     apply: 'Apply',
@@ -136,7 +136,7 @@ export const en: Translation = {
     debtPaidOffTitle: 'Debt Slayer',
     debtPaidOffDesc: 'Paid off a debt completely',
     explorerTitle: 'Explorer',
-    explorerDesc: 'Tried a different currency or language',
+    explorerDesc: 'Tried a different language',
     reporterTitle: 'Reporter',
     reporterDesc: 'Downloaded a PDF report',
     cloudSyncedTitle: 'Synced Up',
@@ -171,11 +171,6 @@ export const en: Translation = {
     payoffOrder: 'Payoff order',
     clearedIn: (time) => `cleared in ${time}`,
     celebrate: 'Celebrate future debt-free you',
-  },
-  currency: {
-    popular: 'Popular',
-    all: 'All currencies (A–Z)',
-    ariaLabel: 'Currency',
   },
   language: {
     ariaLabel: 'Language',

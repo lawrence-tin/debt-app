@@ -1,28 +1,28 @@
 import { en } from './en'
-import { es } from './es'
-import { fr } from './fr'
+import { zu } from './zu'
+import { af } from './af'
 import type { Locale, Translation } from './types'
 
 export type { Locale, Translation } from './types'
 
-export const TRANSLATIONS: Record<Locale, Translation> = { en, es, fr }
+export const TRANSLATIONS: Record<Locale, Translation> = { en, zu, af }
 
 export const LANGUAGE_META: Record<Locale, { label: string; flag: string; dateLocale: string }> = {
-  en: { label: 'English', flag: '🇺🇸', dateLocale: 'en-US' },
-  es: { label: 'Español', flag: '🇪🇸', dateLocale: 'es-ES' },
-  fr: { label: 'Français', flag: '🇫🇷', dateLocale: 'fr-FR' },
+  en: { label: 'English', flag: '🇿🇦', dateLocale: 'en-ZA' },
+  zu: { label: 'isiZulu', flag: '🇿🇦', dateLocale: 'zu-ZA' },
+  af: { label: 'Afrikaans', flag: '🇿🇦', dateLocale: 'af-ZA' },
 }
 
 export function guessLocaleFromBrowser(): Locale {
   if (typeof navigator === 'undefined') return 'en'
   for (const lang of navigator.languages ?? [navigator.language]) {
     const base = lang.slice(0, 2).toLowerCase()
-    if (base === 'es' || base === 'fr' || base === 'en') return base
+    if (base === 'zu' || base === 'af' || base === 'en') return base
   }
   return 'en'
 }
 
-/** Formats a duration in months using the given locale's units, e.g. "1 yr 6 mos" / "1 año 6 meses". */
+/** Formats a duration in months using the given locale's units, e.g. "1 yr 6 mos" / "1 jr 6 md". */
 export function formatMonthsAsYears(months: number, t: Translation): string {
   if (months <= 0) return t.time.zero
   const y = Math.floor(months / 12)

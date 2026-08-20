@@ -1,6 +1,6 @@
 import type { DebtCategory, Strategy } from '../payoff'
 
-export type Locale = 'en' | 'es' | 'fr'
+export type Locale = 'en' | 'zu' | 'af'
 
 export interface Translation {
   meta: {
@@ -157,11 +157,6 @@ export interface Translation {
     payoffOrder: string
     clearedIn: (time: string) => string
     celebrate: string
-  }
-  currency: {
-    popular: string
-    all: string
-    ariaLabel: string
   }
   language: {
     ariaLabel: string
