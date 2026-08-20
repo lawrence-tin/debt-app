@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BookOpen, Lock, MoreHorizontal, RotateCcw } from 'lucide-react'
 import type { Translation } from '../lib/i18n'
 
@@ -17,6 +17,26 @@ interface Props {
  */
 export default function MoreMenu({ t, onLearn, onStartOver }: Props) {
   const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Close on an outside click/tap or Escape. A ref-scoped listener (rather than the old
+  // onBlur+setTimeout hack) can't race a later legitimate open: a click on the toggle
+  // button itself is inside containerRef, so it's never mistaken for an outside click.
+  useEffect(() => {
+    if (!open) return
+    function handlePointerDown(e: MouseEvent) {
+      if (!containerRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
 
   function choose(action: () => void) {
     action()
@@ -24,10 +44,9 @@ export default function MoreMenu({ t, onLearn, onStartOver }: Props) {
   }
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
         aria-label={t.education.openLabel}
         aria-expanded={open}
         className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
