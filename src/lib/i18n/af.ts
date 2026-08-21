@@ -30,6 +30,7 @@ export const af: Translation = {
   },
   debts: {
     heading: 'Jou skulde',
+    addHeading: 'Voeg skuld by',
     summary: (total, min) => `${total} totaal · ${min}/md min`,
     empty: 'Nog geen skulde bygevoeg nie.',
     tryExample: 'Probeer dit met voorbeelddata',
@@ -46,6 +47,9 @@ export const af: Translation = {
     cancel: 'Kanselleer',
     addAnother: "Voeg nog 'n skuld by",
     remove: (name) => `Verwyder ${name}`,
+    logPayment: 'Teken betaling aan',
+    paymentAmount: 'Bedrag',
+    paymentLogged: (name) => `Betaling vir ${name} aangeteken.`,
   },
   category: {
     'credit-card': 'Kredietkaart',

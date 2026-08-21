@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, Calculator, Lock, PartyPopper } from 'lucide-react'
 import DebtsPanel from './DebtsPanel'
+import DebtsList from './DebtsList'
 import StrategyPicker from './StrategyPicker'
 import Simulator from './Simulator'
 import {
@@ -178,11 +179,15 @@ export default function OnboardingWizard({ currency, locale, t, onComplete, onSk
           <DebtsPanel
             debts={debts}
             currency={currency}
-            locale={locale}
             t={t}
             onChange={setDebts}
             onLoadSample={() => setDebts(SAMPLE_DEBTS.map((d) => ({ ...d, id: makeId() })))}
           />
+          {debts.length > 0 && (
+            <div className="mt-4">
+              <DebtsList debts={debts} currency={currency} locale={locale} t={t} onChange={setDebts} />
+            </div>
+          )}
           {debts.length === 0 && <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">{t.onboarding.debtsNeedOne}</p>}
           <WizardNav
             onBack={goBack}

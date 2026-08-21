@@ -30,6 +30,7 @@ export const en: Translation = {
   },
   debts: {
     heading: 'Your debts',
+    addHeading: 'Add a debt',
     summary: (total, min) => `${total} total · ${min}/mo min`,
     empty: 'No debts added yet.',
     tryExample: 'Try it with example data',
@@ -46,6 +47,9 @@ export const en: Translation = {
     cancel: 'Cancel',
     addAnother: 'Add another debt',
     remove: (name) => `Remove ${name}`,
+    logPayment: 'Log payment',
+    paymentAmount: 'Amount',
+    paymentLogged: (name) => `Payment logged for ${name}.`,
   },
   category: {
     'credit-card': 'Credit Card',

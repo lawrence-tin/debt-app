@@ -30,6 +30,7 @@ export const zu: Translation = {
   },
   debts: {
     heading: 'Izikweletu zakho',
+    addHeading: 'Faka isikweletu',
     summary: (total, min) => `${total} sekukonke · ${min}/inyanga okuncane`,
     empty: 'Azikho izikweletu ezengeziwe okwamanje.',
     tryExample: 'Zama ngedatha yesibonelo',
@@ -46,6 +47,9 @@ export const zu: Translation = {
     cancel: 'Khansela',
     addAnother: 'Faka esinye isikweletu',
     remove: (name) => `Susa u-${name}`,
+    logPayment: 'Bhalisa inkokhelo',
+    paymentAmount: 'Inani',
+    paymentLogged: (name) => `Inkokhelo ka-${name} ibhalisiwe.`,
   },
   category: {
     'credit-card': 'Ikhadi Lesikweletu',
