@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { Sparkles } from 'lucide-react'
+import { BookOpen, RotateCcw, Sparkles } from 'lucide-react'
 import BudgetPanel from './components/BudgetPanel'
 import DebtsPanel from './components/DebtsPanel'
 import StrategyPicker from './components/StrategyPicker'
@@ -20,7 +20,7 @@ import OnboardingWizard, { type OnboardingResult } from './components/Onboarding
 import LanguageSelector from './components/LanguageSelector'
 import AccountMenu from './components/AccountMenu'
 import AuthModal from './components/AuthModal'
-import MoreMenu from './components/MoreMenu'
+import PrivacyInfo from './components/PrivacyInfo'
 import EducationCenter from './components/EducationCenter'
 import PricingModal from './components/PricingModal'
 
@@ -390,6 +390,24 @@ export default function App() {
     await authSignOut()
     cloudDebtsRef.current = []
     setSyncStatus('idle')
+    // Clear this account's data from the browser on sign-out — leaving it visible (or in
+    // localStorage) would mean the next person on this device sees a stranger's debts.
+    // This only clears the local view; nothing is deleted from the cloud, and it hydrates
+    // fresh again on the next sign-in.
+    setDebts([])
+    setPayments([])
+    setScenarios([])
+    setMonthlyIncome(DEFAULTS.monthlyIncome)
+    setFixedExpenses(DEFAULTS.fixedExpenses)
+    setExtraPayment(DEFAULTS.extraPayment)
+    setStrategy(DEFAULTS.strategy)
+    setPriorityOrder([])
+    setTriedStrategies([DEFAULTS.strategy])
+    setHasDownloadedReport(false)
+    setDebtsPaidOffCount(0)
+    setHasEditedBudget(false)
+    setHasCompletedOnboarding(false)
+    setPlanBaseline(null)
   }
 
   function resetAll() {
@@ -462,7 +480,25 @@ export default function App() {
             >
               <Sparkles size={13} /> {t.plus.badge}
             </button>
-            <MoreMenu t={t} onLearn={() => setShowEducation(true)} onStartOver={showOnboarding ? undefined : resetAll} />
+            <button
+              onClick={() => setShowEducation(true)}
+              aria-label={t.education.openLabel}
+              title={t.education.openLabel}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+            >
+              <BookOpen size={16} />
+            </button>
+            <PrivacyInfo t={t} />
+            {!showOnboarding && (
+              <button
+                onClick={resetAll}
+                aria-label={t.app.startOver}
+                title={t.app.startOver}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+              >
+                <RotateCcw size={15} />
+              </button>
+            )}
             {isCloudConfigured && (
               <AccountMenu
                 user={user}
