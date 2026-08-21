@@ -47,16 +47,27 @@ alter table public.settings add column if not exists tried_strategies jsonb not 
 alter table public.settings add column if not exists has_downloaded_report boolean not null default false;
 alter table public.settings add column if not exists plan_baseline jsonb;
 
--- One row per payment logged against a debt's recurring due date.
+-- One row per payment logged against a debt — a real ledger entry, not just a
+-- once-per-period marker: a debt can legitimately receive more than one payment in the
+-- same billing period (e.g. R1,000 on the 1st and another R500 on the 15th).
 create table if not exists public.payments (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   debt_id uuid not null references public.debts(id) on delete cascade,
-  -- Billing period this payment covers, as 'YYYY-MM'.
+  amount numeric not null default 0,
+  -- Billing period this payment counts toward, as 'YYYY-MM' — used to resolve Reminders'
+  -- "already paid this cycle" state, not to constrain how many payments a period can have.
   period text not null,
-  paid_at timestamptz not null default now(),
-  unique (debt_id, period)
+  paid_at timestamptz not null default now()
 );
+
+-- Existing installs: add the amount column, and drop the old one-payment-per-period
+-- constraint — it silently rejected a second legitimate payment against the same debt in
+-- the same month (the app's own insert only declares `id` as its upsert conflict target,
+-- so that second insert failed as an unhandled unique-constraint violation and was
+-- swallowed by the caller's best-effort error handling).
+alter table public.payments add column if not exists amount numeric not null default 0;
+alter table public.payments drop constraint if exists payments_debt_id_period_key;
 
 create index if not exists payments_user_id_idx on public.payments (user_id);
 create index if not exists payments_debt_id_idx on public.payments (debt_id);

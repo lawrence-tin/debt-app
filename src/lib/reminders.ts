@@ -3,7 +3,10 @@ import type { Debt } from './payoff'
 export interface Payment {
   id: string
   debtId: string
-  /** Billing period this payment covers, as 'YYYY-MM'. */
+  /** Rand amount of this payment — a real ledger entry, not just a once-per-period marker. */
+  amount: number
+  /** Billing period this payment counts toward, as 'YYYY-MM'. A debt can have more than one
+   *  payment in the same period (e.g. a part-payment early in the month, then the rest later). */
   period: string
   paidAt: string
 }
