@@ -31,6 +31,8 @@ export interface Translation {
   }
   debts: {
     heading: string
+    /** Heading over the "add a debt" form now that it lives in its own place, separate from the list. */
+    addHeading: string
     summary: (total: string, min: string) => string
     empty: string
     tryExample: string
@@ -47,6 +49,10 @@ export interface Translation {
     cancel: string
     addAnother: string
     remove: (name: string) => string
+    /** Button that logs a payment against a debt's balance (distinct from Reminders' due-date "mark paid"). */
+    logPayment: string
+    paymentAmount: string
+    paymentLogged: (name: string) => string
   }
   category: Record<DebtCategory, string>
   strategy: {

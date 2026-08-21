@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, RotateCcw, Sparkles } from 'lucide-react'
 import BudgetPanel from './components/BudgetPanel'
 import DebtsPanel from './components/DebtsPanel'
+import DebtsList from './components/DebtsList'
 import StrategyPicker from './components/StrategyPicker'
 import PriorityList from './components/PriorityList'
 import ScenarioManager from './components/ScenarioManager'
@@ -34,7 +35,7 @@ import { loadState, saveState, SAMPLE_DEBTS } from './lib/storage'
 import { guessLocaleFromBrowser, LANGUAGE_META, TRANSLATIONS, type Locale } from './lib/i18n'
 import { isCloudConfigured } from './lib/supabase'
 import { signOut as authSignOut, useAuth } from './lib/useAuth'
-import type { Payment } from './lib/reminders'
+import { periodKey, type Payment } from './lib/reminders'
 import type { Scenario } from './lib/scenarios'
 import type { AchievementSignals } from './lib/achievements'
 import {
@@ -363,7 +364,19 @@ export default function App() {
     setHasExplored(true)
   }
 
-  function handleMarkPaid(debtId: string, period: string) {
+  /**
+   * Logs a payment against a debt: reduces its balance (so every total derived from
+   * `debts` — the summary line, the hero, the check-in — updates immediately) and records
+   * a Payment for that billing period. Used both by DebtsList's "Log payment" action (any
+   * amount, defaults to the period this month) and Reminders' "mark as paid" (always the
+   * minimum, for the specific due-date cycle it's reminding about).
+   */
+  function handleLogPayment(debtId: string, amount: number, period: string = periodKey(new Date())) {
+    if (!(amount > 0)) return
+    const debt = debts.find((d) => d.id === debtId)
+    if (!debt) return
+    handleDebtsChange(debts.map((d) => (d.id === debtId ? { ...d, balance: Math.max(0, d.balance - amount) } : d)))
+
     const payment: Payment = { id: makeId(), debtId, period, paidAt: new Date().toISOString() }
     setPayments((prev) => [...prev, payment])
     if (user) insertPaymentRemote(user.id, payment).catch(() => {})
@@ -564,7 +577,6 @@ export default function App() {
               <DebtsPanel
                 debts={debts}
                 currency={currency}
-                locale={dateLocale}
                 t={t}
                 onChange={handleDebtsChange}
                 onLoadSample={() => handleDebtsChange(SAMPLE_DEBTS.map((d) => ({ ...d, id: makeId() })))}
@@ -579,13 +591,29 @@ export default function App() {
                   t={t}
                 />
               )}
-              <Reminders debts={debts} payments={payments} t={t} onMarkPaid={handleMarkPaid} />
+              <Reminders
+                debts={debts}
+                payments={payments}
+                t={t}
+                onMarkPaid={(debtId, period) => {
+                  const debt = debts.find((d) => d.id === debtId)
+                  if (debt) handleLogPayment(debtId, debt.minPayment, period)
+                }}
+              />
               {debts.some((d) => d.dueDay) && <PayoffCalendar debts={debts} t={t} locale={dateLocale} />}
             </div>
 
             <div className="space-y-6 lg:col-span-3">
               {debts.length > 0 ? (
                 <>
+                  <DebtsList
+                    debts={debts}
+                    currency={currency}
+                    locale={dateLocale}
+                    t={t}
+                    onChange={handleDebtsChange}
+                    onLogPayment={handleLogPayment}
+                  />
                   <Recommendation avalanche={avalanche} snowball={snowball} currency={currency} locale={dateLocale} t={t} />
                   <Simulator
                     extraPayment={extraPayment}
