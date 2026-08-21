@@ -47,6 +47,7 @@ interface SettingsRow {
 interface PaymentRow {
   id: string
   debt_id: string
+  amount: number
   period: string
   paid_at: string
 }
@@ -213,17 +214,28 @@ export async function fetchCloudPayments(userId: string): Promise<Payment[]> {
   if (!supabase) return []
   const { data, error } = await supabase.from('payments').select('*').eq('user_id', userId)
   if (error) throw error
-  return (data as PaymentRow[]).map((row) => ({ id: row.id, debtId: row.debt_id, period: row.period, paidAt: row.paid_at }))
+  return (data as PaymentRow[]).map((row) => ({
+    id: row.id,
+    debtId: row.debt_id,
+    amount: row.amount,
+    period: row.period,
+    paidAt: row.paid_at,
+  }))
 }
 
 export async function insertPaymentRemote(userId: string, payment: Payment): Promise<void> {
   if (!supabase) return
-  const { error } = await supabase
-    .from('payments')
-    .upsert(
-      { id: payment.id, user_id: userId, debt_id: payment.debtId, period: payment.period, paid_at: payment.paidAt },
-      { onConflict: 'id' },
-    )
+  const { error } = await supabase.from('payments').upsert(
+    {
+      id: payment.id,
+      user_id: userId,
+      debt_id: payment.debtId,
+      amount: payment.amount,
+      period: payment.period,
+      paid_at: payment.paidAt,
+    },
+    { onConflict: 'id' },
+  )
   if (error) throw error
 }
 

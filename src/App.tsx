@@ -377,7 +377,7 @@ export default function App() {
     if (!debt) return
     handleDebtsChange(debts.map((d) => (d.id === debtId ? { ...d, balance: Math.max(0, d.balance - amount) } : d)))
 
-    const payment: Payment = { id: makeId(), debtId, period, paidAt: new Date().toISOString() }
+    const payment: Payment = { id: makeId(), debtId, amount, period, paidAt: new Date().toISOString() }
     setPayments((prev) => [...prev, payment])
     if (user) insertPaymentRemote(user.id, payment).catch(() => {})
   }
