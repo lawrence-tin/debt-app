@@ -35,7 +35,10 @@ export interface CheckIn {
   startedAt: Date
   monthsElapsed: number
   actualReduced: number
-  /** actualReduced minus what the frozen baseline plan expected to have reduced by now. */
+  /** What the frozen baseline plan expected to have reduced by now — the other half of the
+   *  comparison actualReduced is measured against, exposed so the UI can show both. */
+  expectedReduced: number
+  /** actualReduced minus expectedReduced. */
   differenceAmount: number
   /** Months the live projected debt-free date has shifted vs the baseline's. Negative = earlier/better. */
   dateShiftMonths: number
@@ -78,6 +81,7 @@ export function computeCheckIn(baseline: PlanBaseline, debts: Debt[], liveResult
     startedAt,
     monthsElapsed,
     actualReduced,
+    expectedReduced,
     differenceAmount,
     dateShiftMonths,
     baselineDebtFreeDate,
