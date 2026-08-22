@@ -1,11 +1,17 @@
 import { resolve } from 'node:path'
-import { defineConfig } from 'vite'
+import { configDefaults, defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  test: {
+    // Playwright owns e2e/ (its own `test`/`expect` globals, run via `npm run test:e2e`) —
+    // without this, Vitest's default glob picks those files up too and fails immediately,
+    // since they aren't valid Vitest test files.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
+  },
   build: {
     rollupOptions: {
       input: {
