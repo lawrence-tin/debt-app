@@ -51,6 +51,10 @@ describe('computeCheckIn', () => {
     expect(checkIn.monthsElapsed).toBe(2)
     expect(checkIn.status).toBe('ahead')
     expect(checkIn.differenceAmount).toBeGreaterThan(0)
+    // The baseline (R100/mo, no interest) expected R200 reduced after 2 months; the plan
+    // paid down R500, so actualReduced - expectedReduced should equal differenceAmount.
+    expect(checkIn.expectedReduced).toBeCloseTo(200, 5)
+    expect(checkIn.actualReduced - checkIn.expectedReduced).toBeCloseTo(checkIn.differenceAmount, 5)
   })
 
   it('reports "behind" when the user has paid down less than the frozen plan expected', () => {

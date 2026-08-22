@@ -290,9 +290,14 @@ export interface Translation {
   checkIn: {
     heading: string
     tooSoon: (date: string) => string
-    reducedAhead: (reduced: string, since: string, ahead: string) => string
-    reducedBehind: (reduced: string, since: string, behind: string) => string
-    reducedOnTrack: (reduced: string, since: string) => string
+    /** Label under the big hero R-amount when ahead of the frozen baseline. */
+    heroLabelAhead: string
+    heroLabelBehind: string
+    /** Paired with actualReduced (not the ahead/behind delta) as the hero number when on-track. */
+    heroLabelOnTrack: string
+    sinceCaption: (since: string, elapsed: string) => string
+    expectedLabel: string
+    actualLabel: string
     debtFree: string
     dateEarlier: (months: string) => string
     dateLater: (months: string) => string
