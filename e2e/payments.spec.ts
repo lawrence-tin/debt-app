@@ -91,3 +91,28 @@ test('logging a payment against an interest-bearing debt accrues that period fir
 
   await expect(page.locator('label:has-text("Balance") input')).toHaveValue('9100')
 })
+
+test('a payment larger than the balance is rejected, not silently clamped to zero', async ({ page }) => {
+  await page.goto('/')
+  await page.getByText('Skip to dashboard').click()
+
+  await page.getByPlaceholder('Balance').fill('1000')
+  await page.getByPlaceholder('APR %').fill('12')
+  await page.getByPlaceholder('Min payment').fill('100')
+  await page.getByRole('button', { name: 'Add debt' }).click()
+
+  const amountInput = page.getByLabel('Amount')
+  const balanceInput = page.locator('label:has-text("Balance") input')
+
+  await amountInput.fill('5000')
+  await page.getByRole('button', { name: 'Log payment' }).click()
+
+  await expect(page.getByText(/more than the balance/i)).toBeVisible()
+  await expect(balanceInput).toHaveValue('1000') // unchanged — the payment never applied
+
+  // Editing the amount clears the error, and a valid payment then goes through normally.
+  await amountInput.fill('400')
+  await expect(page.getByText(/more than the balance/i)).not.toBeVisible()
+  await page.getByRole('button', { name: 'Log payment' }).click()
+  await expect(balanceInput).toHaveValue('610') // 1000 * 1.01 - 400
+})

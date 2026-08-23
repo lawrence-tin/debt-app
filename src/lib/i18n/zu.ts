@@ -50,6 +50,7 @@ export const zu: Translation = {
     logPayment: 'Bhalisa inkokhelo',
     paymentAmount: 'Inani',
     paymentLogged: (name) => `Inkokhelo ka-${name} ibhalisiwe.`,
+    paymentExceedsBalance: (balance) => `Lokho kungaphezu kwebhalansi (${balance}) — inkokhelo ayikwazi ukwenza ibhalansi ibe ngaphansi koziro.`,
   },
   category: {
     'credit-card': 'Ikhadi Lesikweletu',
