@@ -83,6 +83,20 @@ export function totalBalance(debts: Debt[]): number {
 }
 
 /**
+ * Reduces a debt's balance by a real payment. If this is the first payment logged against
+ * the debt for its current billing period, one month's interest is accrued first — the same
+ * accrual simulatePayoff's own month loop applies — so the payment comes off what was
+ * actually owed by the time it was made, not just whatever the balance happened to read
+ * when it was last edited. A second (or third) payment within the same period skips
+ * re-accruing interest, since a real billing cycle charges interest once per cycle no
+ * matter how many payments land in it.
+ */
+export function applyPayment(debt: Debt, amount: number, accrueInterest: boolean): number {
+  const owedBeforePayment = accrueInterest ? debt.balance * (1 + debt.apr / 100 / 12) : debt.balance
+  return Math.max(0, owedBeforePayment - amount)
+}
+
+/**
  * Simulates a month-by-month debt payoff plan.
  * `monthlyBudget` is the total amount available each month across all debts
  * (minimum payments + any extra). Extra beyond minimums cascades to debts

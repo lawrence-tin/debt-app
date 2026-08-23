@@ -28,7 +28,7 @@ import PricingModal from './components/PricingModal'
 const PayoffChart = lazy(() => import('./components/PayoffChart'))
 import ThemeToggle from './components/ThemeToggle'
 import Confetti from './components/Confetti'
-import { makeId, simulatePayoff, totalMinPayment, type Debt, type Strategy } from './lib/payoff'
+import { applyPayment, makeId, simulatePayoff, totalMinPayment, type Debt, type Strategy } from './lib/payoff'
 import { captureBaseline, type PlanBaseline } from './lib/checkIn'
 import { trackEvent } from './lib/analytics'
 import { loadState, saveState, SAMPLE_DEBTS } from './lib/storage'
@@ -365,17 +365,21 @@ export default function App() {
   }
 
   /**
-   * Logs a payment against a debt: reduces its balance (so every total derived from
-   * `debts` — the summary line, the hero, the check-in — updates immediately) and records
-   * a Payment for that billing period. Used both by DebtsList's "Log payment" action (any
-   * amount, defaults to the period this month) and Reminders' "mark as paid" (always the
-   * minimum, for the specific due-date cycle it's reminding about).
+   * Logs a payment against a debt: reduces its balance (accruing that period's interest
+   * first, if this is the first payment logged against it this period — see
+   * payoff.ts#applyPayment) so every total derived from `debts` — the summary line, the
+   * hero, the check-in — updates immediately, and records a Payment for that billing
+   * period. Used both by DebtsList's "Log payment" action (any amount, defaults to the
+   * period this month) and Reminders' "mark as paid" (always the minimum, for the specific
+   * due-date cycle it's reminding about).
    */
   function handleLogPayment(debtId: string, amount: number, period: string = periodKey(new Date())) {
     if (!(amount > 0)) return
     const debt = debts.find((d) => d.id === debtId)
     if (!debt) return
-    handleDebtsChange(debts.map((d) => (d.id === debtId ? { ...d, balance: Math.max(0, d.balance - amount) } : d)))
+    const accrueInterest = !payments.some((p) => p.debtId === debtId && p.period === period)
+    const newBalance = applyPayment(debt, amount, accrueInterest)
+    handleDebtsChange(debts.map((d) => (d.id === debtId ? { ...d, balance: newBalance } : d)))
 
     const payment: Payment = { id: makeId(), debtId, amount, period, paidAt: new Date().toISOString() }
     setPayments((prev) => [...prev, payment])
