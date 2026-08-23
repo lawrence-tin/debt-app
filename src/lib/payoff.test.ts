@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatCurrency, simulatePayoff, totalMinPayment, type Debt } from './payoff'
+import { applyPayment, formatCurrency, simulatePayoff, totalMinPayment, type Debt } from './payoff'
 
 function debt(overrides: Partial<Debt> & { id: string }): Debt {
   return {
@@ -150,5 +150,29 @@ describe('formatCurrency — precision and rounding', () => {
 
   it('falls back gracefully for an unsupported currency code instead of throwing', () => {
     expect(() => formatCurrency(100, 'XXX_NOT_REAL', 'en-US')).not.toThrow()
+  })
+})
+
+describe('applyPayment', () => {
+  it('accrues one month of interest before subtracting a payment, on the first payment of a period', () => {
+    const d = debt({ id: 'a', balance: 10000, apr: 12, minPayment: 1000 })
+    // 10000 * (1 + 12/100/12) = 10100, then -1000 = 9100 — not a flat 10000-1000=9000.
+    expect(applyPayment(d, 1000, true)).toBeCloseTo(9100, 5)
+  })
+
+  it('does not re-accrue interest for a second payment in the same period', () => {
+    const d = debt({ id: 'a', balance: 9100, apr: 12, minPayment: 1000 })
+    expect(applyPayment(d, 500, false)).toBeCloseTo(8600, 5)
+  })
+
+  it('a zero-APR debt is unaffected by the accrual flag either way', () => {
+    const d = debt({ id: 'a', balance: 1000, apr: 0, minPayment: 100 })
+    expect(applyPayment(d, 100, true)).toBe(900)
+    expect(applyPayment(d, 100, false)).toBe(900)
+  })
+
+  it('never drops a balance below zero even when the payment overshoots what is owed', () => {
+    const d = debt({ id: 'a', balance: 100, apr: 12, minPayment: 100 })
+    expect(applyPayment(d, 500, true)).toBe(0)
   })
 })

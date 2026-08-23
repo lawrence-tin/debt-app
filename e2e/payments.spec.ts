@@ -70,3 +70,24 @@ test('logging a payment reduces the balance and updates the check-in', async ({ 
     expect(heroAfter).not.toBe(heroBefore)
   }).toPass()
 })
+
+/**
+ * Regression test for a real reported bug: a debt with a non-zero APR logged a payment as
+ * flat subtraction (balance - amount) with no interest at all, so a R10,000 balance minus a
+ * R1,000 payment landed on R9,000 — silently ignoring the APR entirely. It should land on
+ * R9,100: interest for the period accrues first (payoff.ts#applyPayment), the same way
+ * simulatePayoff's own month loop treats every month.
+ */
+test('logging a payment against an interest-bearing debt accrues that period first', async ({ page }) => {
+  await page.goto('/')
+  await page.getByText('Skip to dashboard').click()
+
+  await page.getByPlaceholder('Balance').fill('10000')
+  await page.getByPlaceholder('APR %').fill('12')
+  await page.getByPlaceholder('Min payment').fill('1000')
+  await page.getByRole('button', { name: 'Add debt' }).click()
+
+  await page.getByRole('button', { name: 'Log payment' }).click()
+
+  await expect(page.locator('label:has-text("Balance") input')).toHaveValue('9100')
+})
