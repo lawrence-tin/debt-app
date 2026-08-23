@@ -53,6 +53,8 @@ export interface Translation {
     logPayment: string
     paymentAmount: string
     paymentLogged: (name: string) => string
+    /** Shown when a payment amount typed in exceeds the debt's current balance. */
+    paymentExceedsBalance: (balance: string) => string
   }
   category: Record<DebtCategory, string>
   strategy: {

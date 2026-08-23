@@ -33,6 +33,7 @@ export default function DebtsList({ debts, currency, locale, t, onChange, onLogP
   const symbol = getCurrencySymbol(currency)
   const [paymentDrafts, setPaymentDrafts] = useState<Record<string, string>>({})
   const [justLogged, setJustLogged] = useState<string | null>(null)
+  const [paymentErrors, setPaymentErrors] = useState<Record<string, boolean>>({})
 
   function updateDebt(id: string, patch: Partial<Debt>) {
     onChange(debts.map((d) => (d.id === id ? { ...d, ...patch } : d)))
@@ -47,10 +48,23 @@ export default function DebtsList({ debts, currency, locale, t, onChange, onLogP
     const raw = paymentDrafts[debt.id]
     const amount = raw !== undefined && raw !== '' ? Number(raw) : debt.minPayment
     if (!(amount > 0)) return
+    // A payment can never make a balance negative — reject it here rather than silently
+    // clamping to zero, so the difference between "you paid this off" and "you fat-fingered
+    // an extra zero" is never lost.
+    if (amount > debt.balance) {
+      setPaymentErrors((prev) => ({ ...prev, [debt.id]: true }))
+      return
+    }
     onLogPayment(debt.id, amount)
     setPaymentDrafts((prev) => ({ ...prev, [debt.id]: '' }))
+    setPaymentErrors((prev) => ({ ...prev, [debt.id]: false }))
     setJustLogged(debt.id)
     setTimeout(() => setJustLogged((id) => (id === debt.id ? null : id)), 2000)
+  }
+
+  function updatePaymentDraft(debtId: string, value: string) {
+    setPaymentDrafts((prev) => ({ ...prev, [debtId]: value }))
+    setPaymentErrors((prev) => ({ ...prev, [debtId]: false }))
   }
 
   if (debts.length === 0) return null
@@ -157,28 +171,42 @@ export default function DebtsList({ debts, currency, locale, t, onChange, onLogP
             </div>
 
             {onLogPayment && d.balance > 0 && (
-              <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-                <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 px-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800">
-                  <span className="mr-1 text-slate-400">{symbol}</span>
-                  <input
-                    type="number"
-                    placeholder={String(d.minPayment)}
-                    aria-label={t.debts.paymentAmount}
-                    value={paymentDrafts[d.id] ?? ''}
-                    onChange={(e) => setPaymentDrafts((prev) => ({ ...prev, [d.id]: e.target.value }))}
-                    className="w-24 bg-transparent py-1.5 text-sm text-slate-900 outline-none dark:text-white"
-                  />
+              <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`flex items-center rounded-lg border bg-slate-50 px-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:bg-slate-800 ${
+                      paymentErrors[d.id]
+                        ? 'border-rose-400 ring-2 ring-rose-400 dark:border-rose-500'
+                        : 'border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    <span className="mr-1 text-slate-400">{symbol}</span>
+                    <input
+                      type="number"
+                      placeholder={String(d.minPayment)}
+                      aria-label={t.debts.paymentAmount}
+                      aria-invalid={paymentErrors[d.id] ?? false}
+                      value={paymentDrafts[d.id] ?? ''}
+                      onChange={(e) => updatePaymentDraft(d.id, e.target.value)}
+                      className="w-24 bg-transparent py-1.5 text-sm text-slate-900 outline-none dark:text-white"
+                    />
+                  </div>
+                  <button
+                    onClick={() => logPayment(d)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20"
+                  >
+                    <BanknoteArrowDown size={14} /> {t.debts.logPayment}
+                  </button>
+                  {justLogged === d.id && (
+                    <span role="status" className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      {t.debts.paymentLogged(d.name)}
+                    </span>
+                  )}
                 </div>
-                <button
-                  onClick={() => logPayment(d)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20"
-                >
-                  <BanknoteArrowDown size={14} /> {t.debts.logPayment}
-                </button>
-                {justLogged === d.id && (
-                  <span role="status" className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                    {t.debts.paymentLogged(d.name)}
-                  </span>
+                {paymentErrors[d.id] && (
+                  <p className="mt-1.5 text-xs font-medium text-rose-500">
+                    {t.debts.paymentExceedsBalance(formatCurrency(d.balance, currency, locale))}
+                  </p>
                 )}
               </div>
             )}

@@ -50,6 +50,7 @@ export const af: Translation = {
     logPayment: 'Teken betaling aan',
     paymentAmount: 'Bedrag',
     paymentLogged: (name) => `Betaling vir ${name} aangeteken.`,
+    paymentExceedsBalance: (balance) => `Dit is meer as die balans (${balance}) — 'n betaling kan nooit 'n balans negatief maak nie.`,
   },
   category: {
     'credit-card': 'Kredietkaart',

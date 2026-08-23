@@ -50,6 +50,7 @@ export const en: Translation = {
     logPayment: 'Log payment',
     paymentAmount: 'Amount',
     paymentLogged: (name) => `Payment logged for ${name}.`,
+    paymentExceedsBalance: (balance) => `That's more than the balance (${balance}) — a payment can never make a balance negative.`,
   },
   category: {
     'credit-card': 'Credit Card',
