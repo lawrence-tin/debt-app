@@ -27,6 +27,8 @@ export const zu: Translation = {
     totalBudget: 'Ibhajethi yesikweletu yenyanga eyonke',
     leftOver: 'Okusele',
     negativeWarning: 'Ibhajethi yakho isingena ku-negative — nciphisa inkokhelo eyengeziwe noma wehlise ezinye izindleko.',
+    negativeIncomeError: 'Imali engenayo ayikwazi ukuba ngaphansi kukaziro.',
+    negativeExpensesError: 'Izindleko azikwazi ukuba ngaphansi kukaziro.',
   },
   debts: {
     heading: 'Izikweletu zakho',
