@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Wallet } from 'lucide-react'
 import { formatCurrency } from '../lib/payoff'
 import { getCurrencySymbol } from '../lib/currencies'
@@ -28,6 +29,32 @@ export default function BudgetPanel({
   const leftover = monthlyIncome - fixedExpenses - totalDebtBudget
   const symbol = getCurrencySymbol(currency)
 
+  const [incomeError, setIncomeError] = useState(false)
+  const [expensesError, setExpensesError] = useState(false)
+
+  // A negative amount is rejected outright rather than accepted and clamped: the field
+  // simply never updates (so a typed "-" can't persist past the digit that makes the
+  // number negative), and pasting a negative value in one go surfaces the error below.
+  function handleIncomeChange(raw: string) {
+    const parsed = Number(raw)
+    if (parsed < 0) {
+      setIncomeError(true)
+      return
+    }
+    setIncomeError(false)
+    onChange({ monthlyIncome: parsed || 0 })
+  }
+
+  function handleExpensesChange(raw: string) {
+    const parsed = Number(raw)
+    if (parsed < 0) {
+      setExpensesError(true)
+      return
+    }
+    setExpensesError(false)
+    onChange({ fixedExpenses: parsed || 0 })
+  }
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="mb-4 flex items-center gap-2">
@@ -40,32 +67,44 @@ export default function BudgetPanel({
       <div className="grid grid-cols-2 gap-4">
         <label className="col-span-1 text-sm">
           <span className="mb-1 block font-medium text-slate-600 dark:text-slate-300">{t.budget.monthlyIncome}</span>
-          <div className="flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800">
+          <div
+            className={`flex items-center rounded-lg border bg-slate-50 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:bg-slate-800 ${
+              incomeError ? 'border-rose-400 ring-2 ring-rose-400 dark:border-rose-500' : 'border-slate-300 dark:border-slate-700'
+            }`}
+          >
             <span className="mr-1 text-slate-400">{symbol}</span>
             <input
               type="number"
               min={0}
               value={monthlyIncome || ''}
-              onChange={(e) => onChange({ monthlyIncome: Number(e.target.value) || 0 })}
+              aria-invalid={incomeError}
+              onChange={(e) => handleIncomeChange(e.target.value)}
               className="w-full bg-transparent text-slate-900 outline-none dark:text-white"
               placeholder={t.budget.monthlyIncomePlaceholder}
             />
           </div>
+          {incomeError && <p className="mt-1 text-xs font-medium text-rose-500">{t.budget.negativeIncomeError}</p>}
         </label>
 
         <label className="col-span-1 text-sm">
           <span className="mb-1 block font-medium text-slate-600 dark:text-slate-300">{t.budget.otherExpenses}</span>
-          <div className="flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800">
+          <div
+            className={`flex items-center rounded-lg border bg-slate-50 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 dark:bg-slate-800 ${
+              expensesError ? 'border-rose-400 ring-2 ring-rose-400 dark:border-rose-500' : 'border-slate-300 dark:border-slate-700'
+            }`}
+          >
             <span className="mr-1 text-slate-400">{symbol}</span>
             <input
               type="number"
               min={0}
               value={fixedExpenses || ''}
-              onChange={(e) => onChange({ fixedExpenses: Number(e.target.value) || 0 })}
+              aria-invalid={expensesError}
+              onChange={(e) => handleExpensesChange(e.target.value)}
               className="w-full bg-transparent text-slate-900 outline-none dark:text-white"
               placeholder={t.budget.otherExpensesPlaceholder}
             />
           </div>
+          {expensesError && <p className="mt-1 text-xs font-medium text-rose-500">{t.budget.negativeExpensesError}</p>}
         </label>
       </div>
 

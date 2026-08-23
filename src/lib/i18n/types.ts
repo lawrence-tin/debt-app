@@ -28,6 +28,8 @@ export interface Translation {
     totalBudget: string
     leftOver: string
     negativeWarning: string
+    negativeIncomeError: string
+    negativeExpensesError: string
   }
   debts: {
     heading: string

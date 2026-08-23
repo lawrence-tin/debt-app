@@ -27,6 +27,8 @@ export const en: Translation = {
     totalBudget: 'Total monthly debt budget',
     leftOver: 'Left over',
     negativeWarning: 'Your budget is running negative — reduce the extra payment or lower other expenses.',
+    negativeIncomeError: "Income can't be negative.",
+    negativeExpensesError: "Expenses can't be negative.",
   },
   debts: {
     heading: 'Your debts',

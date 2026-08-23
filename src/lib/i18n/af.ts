@@ -27,6 +27,8 @@ export const af: Translation = {
     totalBudget: 'Totale maandelikse skuldbegroting',
     leftOver: 'Oor',
     negativeWarning: 'Jou begroting is negatief — verminder die ekstra betaling of verlaag ander uitgawes.',
+    negativeIncomeError: "Inkomste kan nie negatief wees nie.",
+    negativeExpensesError: "Uitgawes kan nie negatief wees nie.",
   },
   debts: {
     heading: 'Jou skulde',
