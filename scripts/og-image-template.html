@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<style>
+  @font-face {
+    font-family: "Inter";
+    src: local("Inter");
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 1200px;
+    height: 630px;
+    background: #0f172a;
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+  .glow {
+    position: absolute;
+    width: 900px;
+    height: 900px;
+    top: -420px;
+    right: -320px;
+    background: radial-gradient(circle at center, rgba(14,165,233,0.22) 0%, rgba(14,165,233,0) 70%);
+  }
+  .glow2 {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    bottom: -380px;
+    left: -260px;
+    background: radial-gradient(circle at center, rgba(52,211,153,0.16) 0%, rgba(52,211,153,0) 70%);
+  }
+  .content {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 96px;
+  }
+  .mark {
+    width: 88px;
+    height: 88px;
+    border-radius: 22px;
+    background: #17213a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+  .wordmark {
+    font-size: 76px;
+    font-weight: 800;
+    color: #f8fafc;
+    letter-spacing: -0.02em;
+    margin-bottom: 22px;
+  }
+  .tagline {
+    font-size: 32px;
+    font-weight: 500;
+    color: #94a3b8;
+    max-width: 880px;
+    line-height: 1.35;
+  }
+  .pill-row {
+    display: flex;
+    gap: 14px;
+    margin-top: 44px;
+  }
+  .pill {
+    font-size: 22px;
+    font-weight: 600;
+    color: #cbd5e1;
+    background: rgba(148,163,184,0.1);
+    border: 1px solid rgba(148,163,184,0.18);
+    padding: 10px 22px;
+    border-radius: 999px;
+  }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="glow2"></div>
+  <div class="content">
+    <div class="mark">
+      <svg width="52" height="52" viewBox="0 0 64 64">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#34d399"/>
+            <stop offset="1" stop-color="#0ea5e9"/>
+          </linearGradient>
+        </defs>
+        <path d="M14 40 L26 28 L34 36 L50 18" stroke="url(#g)" stroke-width="5.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M40 18 H50 V28" stroke="url(#g)" stroke-width="5.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="14" cy="40" r="3.8" fill="#34d399"/>
+      </svg>
+    </div>
+    <div class="wordmark">ClearPath</div>
+    <div class="tagline">Plan your debt-free date with the avalanche or snowball method, tailored to your income.</div>
+    <div class="pill-row">
+      <div class="pill">🇿🇦 South Africa · ZAR</div>
+      <div class="pill">Free, no account needed</div>
+    </div>
+  </div>
+</body>
+</html>
