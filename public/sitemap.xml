@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://clearpathdebt.netlify.app/</loc>
+    <loc>https://clearpathdebt.co.za/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://clearpathdebt.netlify.app/tools/south-africa-debt-payoff-calculator/</loc>
+    <loc>https://clearpathdebt.co.za/tools/south-africa-debt-payoff-calculator/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://clearpathdebt.netlify.app/tools/debt-free-date-calculator/</loc>
+    <loc>https://clearpathdebt.co.za/tools/debt-free-date-calculator/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://clearpathdebt.netlify.app/tools/credit-card-payoff-calculator/</loc>
+    <loc>https://clearpathdebt.co.za/tools/credit-card-payoff-calculator/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://clearpathdebt.netlify.app/tools/avalanche-vs-snowball-calculator/</loc>
+    <loc>https://clearpathdebt.co.za/tools/avalanche-vs-snowball-calculator/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://clearpathdebt.netlify.app/tools/extra-payment-calculator/</loc>
+    <loc>https://clearpathdebt.co.za/tools/extra-payment-calculator/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://clearpathdebt.netlify.app/tools/interest-savings-calculator/</loc>
+    <loc>https://clearpathdebt.co.za/tools/interest-savings-calculator/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://clearpathdebt.netlify.app/tools/loan-payoff-calculator/</loc>
+    <loc>https://clearpathdebt.co.za/tools/loan-payoff-calculator/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
