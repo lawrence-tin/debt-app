@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { BookOpen, RotateCcw, Sparkles } from 'lucide-react'
+import { BookOpen, RotateCcw, Sparkles, Users } from 'lucide-react'
 import BudgetPanel from './components/BudgetPanel'
 import DebtsPanel from './components/DebtsPanel'
 import DebtsList from './components/DebtsList'
@@ -24,6 +24,8 @@ import AuthModal from './components/AuthModal'
 import PrivacyInfo from './components/PrivacyInfo'
 import EducationCenter from './components/EducationCenter'
 import PricingModal from './components/PricingModal'
+import SharedPlanModal from './components/SharedPlanModal'
+import SharedPlanView from './components/SharedPlanView'
 
 const PayoffChart = lazy(() => import('./components/PayoffChart'))
 import ThemeToggle from './components/ThemeToggle'
@@ -109,6 +111,8 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showEducation, setShowEducation] = useState(false)
   const [showPricing, setShowPricing] = useState(false)
+  const [showSharedPlan, setShowSharedPlan] = useState(false)
+  const [viewingPlan, setViewingPlan] = useState<{ ownerId: string; ownerEmail: string } | null>(null)
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle')
   const cloudDebtsRef = useRef<Debt[]>(debts)
   const hydratingRef = useRef(false)
@@ -495,6 +499,27 @@ export default function App() {
           onClose={() => setShowPricing(false)}
         />
       )}
+      {showSharedPlan && user && (
+        <SharedPlanModal
+          t={t}
+          user={user}
+          subscriptionStatus={subscriptionStatus}
+          onClose={() => setShowSharedPlan(false)}
+          onViewPlan={(ownerId, ownerEmail) => {
+            setViewingPlan({ ownerId, ownerEmail })
+            setShowSharedPlan(false)
+          }}
+        />
+      )}
+      {viewingPlan && (
+        <SharedPlanView
+          t={t}
+          locale={dateLocale}
+          ownerId={viewingPlan.ownerId}
+          ownerEmail={viewingPlan.ownerEmail}
+          onBack={() => setViewingPlan(null)}
+        />
+      )}
 
       <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
@@ -512,6 +537,16 @@ export default function App() {
             >
               <Sparkles size={13} /> {t.plus.badge}
             </button>
+            {isCloudConfigured && user && (
+              <button
+                onClick={() => setShowSharedPlan(true)}
+                aria-label={t.sharedPlan.buttonLabel}
+                title={t.sharedPlan.buttonLabel}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+              >
+                <Users size={15} />
+              </button>
+            )}
             <button
               onClick={() => setShowEducation(true)}
               aria-label={t.education.openLabel}
