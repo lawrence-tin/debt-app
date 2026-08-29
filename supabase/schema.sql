@@ -118,12 +118,51 @@ create index if not exists analytics_events_visitor_id_idx on public.analytics_e
 create index if not exists analytics_events_event_idx on public.analytics_events (event);
 create index if not exists analytics_events_created_at_idx on public.analytics_events (created_at);
 
+-- ClearPath Plus: one row per user tracking their Paystack subscription state. Written
+-- only by the paystack-webhook Netlify Function using the service_role key (which bypasses
+-- RLS) — never directly by the client, since subscription status must only ever change in
+-- response to a real, signature-verified event from Paystack. Users may read their own row
+-- so the app can show/hide Plus features.
+create table if not exists public.subscriptions (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  -- 'inactive' | 'active' | 'cancelled' | 'past_due' — mirrors Paystack's subscription
+  -- lifecycle; the app only unlocks Plus features when this is 'active'.
+  status text not null default 'inactive',
+  paystack_customer_code text,
+  paystack_subscription_code text,
+  plan_code text,
+  current_period_end timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- A shared "couple plan" link: the owner is whoever's debts/settings/payments/scenarios
+-- are being shared; the member is the person granted access once they accept. Only usable
+-- while the owner has an active subscription (enforced in the RLS policies below, not just
+-- at invite time) — access silently stops the moment a subscription lapses, no cleanup job
+-- required.
+create table if not exists public.plan_members (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  member_id uuid references auth.users(id) on delete cascade,
+  invited_email text not null,
+  -- 'pending' until the invited person (signed in with a matching email) accepts it.
+  status text not null default 'pending',
+  created_at timestamptz not null default now(),
+  unique (owner_id, invited_email)
+);
+
+create index if not exists plan_members_owner_id_idx on public.plan_members (owner_id);
+create index if not exists plan_members_member_id_idx on public.plan_members (member_id);
+
 alter table public.debts enable row level security;
 alter table public.settings enable row level security;
 alter table public.payments enable row level security;
 alter table public.scenarios enable row level security;
 alter table public.plus_waitlist enable row level security;
 alter table public.analytics_events enable row level security;
+alter table public.subscriptions enable row level security;
+alter table public.plan_members enable row level security;
 
 -- Each user may only see/change their own rows.
 drop policy if exists "debts_select_own" on public.debts;
@@ -196,3 +235,90 @@ create policy "plus_waitlist_insert_anyone" on public.plus_waitlist
 drop policy if exists "analytics_events_insert_anyone" on public.analytics_events;
 create policy "analytics_events_insert_anyone" on public.analytics_events
   for insert with check (true);
+
+-- subscriptions: read-only from the client. Only the paystack-webhook function (using
+-- service_role, which bypasses RLS entirely) ever writes to this table.
+drop policy if exists "subscriptions_select_own" on public.subscriptions;
+create policy "subscriptions_select_own" on public.subscriptions
+  for select using (auth.uid() = user_id);
+
+-- plan_members: an owner may invite (insert) only while their own subscription is active,
+-- and only ever as themselves. Both the owner and the invited person (by email, before
+-- they've necessarily accepted) may see the row so an unsent invite is visible to whoever
+-- it was meant for. Only the invited person may accept it (update from 'pending' to
+-- 'accepted', claiming member_id as themselves) — an owner can't self-accept their own
+-- invite. Either side may delete it (owner revokes, or member leaves the shared plan).
+drop policy if exists "plan_members_select_own_or_invited" on public.plan_members;
+create policy "plan_members_select_own_or_invited" on public.plan_members
+  for select using (
+    auth.uid() = owner_id
+    or auth.uid() = member_id
+    or lower(invited_email) = lower(auth.jwt() ->> 'email')
+  );
+
+drop policy if exists "plan_members_insert_if_subscribed" on public.plan_members;
+create policy "plan_members_insert_if_subscribed" on public.plan_members
+  for insert with check (
+    auth.uid() = owner_id
+    and exists (
+      select 1 from public.subscriptions s
+      where s.user_id = auth.uid() and s.status = 'active'
+    )
+  );
+
+drop policy if exists "plan_members_accept_own_invite" on public.plan_members;
+create policy "plan_members_accept_own_invite" on public.plan_members
+  for update using (
+    lower(invited_email) = lower(auth.jwt() ->> 'email')
+  )
+  with check (member_id = auth.uid());
+
+drop policy if exists "plan_members_delete_owner_or_member" on public.plan_members;
+create policy "plan_members_delete_owner_or_member" on public.plan_members
+  for delete using (auth.uid() = owner_id or auth.uid() = member_id);
+
+-- Shared-plan access to an owner's debts/settings/payments/scenarios: an accepted member
+-- gets the same read/write access the owner has, but ONLY while the owner's subscription is
+-- still active — checked live on every query, not just at invite time, so access revokes
+-- itself automatically the moment a subscription lapses. These are additive to the
+-- "_own" policies above (Postgres ORs multiple permissive policies together for the same
+-- command), so existing single-user behavior is unchanged.
+drop policy if exists "debts_shared_access" on public.debts;
+create policy "debts_shared_access" on public.debts
+  for all using (
+    exists (
+      select 1 from public.plan_members pm
+      join public.subscriptions s on s.user_id = pm.owner_id and s.status = 'active'
+      where pm.owner_id = debts.user_id and pm.member_id = auth.uid() and pm.status = 'accepted'
+    )
+  );
+
+drop policy if exists "settings_shared_access" on public.settings;
+create policy "settings_shared_access" on public.settings
+  for all using (
+    exists (
+      select 1 from public.plan_members pm
+      join public.subscriptions s on s.user_id = pm.owner_id and s.status = 'active'
+      where pm.owner_id = settings.user_id and pm.member_id = auth.uid() and pm.status = 'accepted'
+    )
+  );
+
+drop policy if exists "payments_shared_access" on public.payments;
+create policy "payments_shared_access" on public.payments
+  for all using (
+    exists (
+      select 1 from public.plan_members pm
+      join public.subscriptions s on s.user_id = pm.owner_id and s.status = 'active'
+      where pm.owner_id = payments.user_id and pm.member_id = auth.uid() and pm.status = 'accepted'
+    )
+  );
+
+drop policy if exists "scenarios_shared_access" on public.scenarios;
+create policy "scenarios_shared_access" on public.scenarios
+  for all using (
+    exists (
+      select 1 from public.plan_members pm
+      join public.subscriptions s on s.user_id = pm.owner_id and s.status = 'active'
+      where pm.owner_id = scenarios.user_id and pm.member_id = auth.uid() and pm.status = 'accepted'
+    )
+  );
