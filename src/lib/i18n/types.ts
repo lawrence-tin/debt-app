@@ -223,24 +223,19 @@ export interface Translation {
     badge: string
     heading: string
     subheading: string
-    previewNote: string
-    monthly: string
-    annual: string
     perMonth: string
-    perYear: string
-    saveBadge: (percent: number) => string
     freeTitle: string
     freePrice: string
     freeFeatures: [string, string, string]
     plusTitle: string
-    plusFeatures: [string, string, string, string, string]
-    emailPlaceholder: string
-    notifyButton: string
-    joining: string
-    joinedTitle: string
-    joinedBody: string
-    errorGeneric: string
-    errorInvalidEmail: string
+    plusPrice: string
+    plusFeatures: [string, string]
+    subscribeButton: string
+    subscribing: string
+    activeTitle: string
+    activeBody: string
+    signInRequired: string
+    checkoutError: string
     notConfigured: string
     closeLabel: string
   }

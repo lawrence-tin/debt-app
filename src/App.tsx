@@ -34,6 +34,7 @@ import { trackEvent } from './lib/analytics'
 import { loadState, saveState, SAMPLE_DEBTS } from './lib/storage'
 import { guessLocaleFromBrowser, LANGUAGE_META, TRANSLATIONS, type Locale } from './lib/i18n'
 import { isCloudConfigured } from './lib/supabase'
+import { useSubscription } from './lib/billing'
 import { signOut as authSignOut, useAuth } from './lib/useAuth'
 import { periodKey, type Payment } from './lib/reminders'
 import type { Scenario } from './lib/scenarios'
@@ -102,9 +103,9 @@ export default function App() {
   const [hasExplored, setHasExplored] = useState(saved?.hasExplored ?? false)
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(saved?.hasCompletedOnboarding ?? false)
   const [planBaseline, setPlanBaseline] = useState<PlanBaseline | null>(saved?.planBaseline ?? null)
-  const [hasJoinedPlusWaitlist, setHasJoinedPlusWaitlist] = useState(saved?.hasJoinedPlusWaitlist ?? false)
 
   const { user, loading: authLoading } = useAuth()
+  const { status: subscriptionStatus, refetch: refetchSubscription } = useSubscription(user?.id)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showEducation, setShowEducation] = useState(false)
   const [showPricing, setShowPricing] = useState(false)
@@ -145,7 +146,6 @@ export default function App() {
       hasExplored,
       hasCompletedOnboarding,
       planBaseline,
-      hasJoinedPlusWaitlist,
     })
   }, [
     debts,
@@ -166,7 +166,6 @@ export default function App() {
     hasExplored,
     hasCompletedOnboarding,
     planBaseline,
-    hasJoinedPlusWaitlist,
   ])
 
   function currentSettings(): CloudSettings {
@@ -311,6 +310,24 @@ export default function App() {
   // directly, since either path ends up changing this same App-level state.
   useEffect(() => {
     trackEvent('visitor', user?.id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Returning from a successful Paystack checkout (paystack-init's callback_url). The
+  // webhook that actually flips subscriptions.status to 'active' can take a few seconds to
+  // land, so poll briefly rather than check once and give up — then open the pricing modal
+  // to show the result either way, and strip the query param so a refresh doesn't repeat it.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('plus') !== 'success') return
+    window.history.replaceState(null, '', window.location.pathname)
+    setShowPricing(true)
+    let attempts = 0
+    const interval = setInterval(() => {
+      attempts += 1
+      refetchSubscription()
+      if (attempts >= 5) clearInterval(interval)
+    }, 1500)
+    return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -473,10 +490,8 @@ export default function App() {
       {showPricing && (
         <PricingModal
           t={t}
-          locale={dateLocale}
-          currency={currency}
-          hasJoined={hasJoinedPlusWaitlist}
-          onJoined={() => setHasJoinedPlusWaitlist(true)}
+          isSignedIn={Boolean(user)}
+          subscriptionStatus={subscriptionStatus}
           onClose={() => setShowPricing(false)}
         />
       )}
