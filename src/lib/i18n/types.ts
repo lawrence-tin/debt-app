@@ -239,6 +239,34 @@ export interface Translation {
     notConfigured: string
     closeLabel: string
   }
+  sharedPlan: {
+    buttonLabel: string
+    heading: string
+    inviteHeading: string
+    inviteDescription: string
+    emailPlaceholder: string
+    inviteButton: string
+    inviting: string
+    requiresPlus: string
+    statusPending: string
+    statusAccepted: string
+    revokeButton: string
+    incomingHeading: string
+    incomingEmpty: string
+    acceptButton: string
+    accepting: string
+    sharedWithYouHeading: string
+    viewButton: string
+    leaveButton: string
+    noSharedPlans: string
+    errorGeneric: string
+    errorInvalidEmail: string
+    closeLabel: string
+    viewTitle: (email: string) => string
+    backButton: string
+    loadingPlan: string
+    emptyDebts: string
+  }
   education: {
     openLabel: string
     heading: string

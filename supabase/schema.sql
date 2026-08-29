@@ -144,6 +144,10 @@ create table if not exists public.subscriptions (
 create table if not exists public.plan_members (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references auth.users(id) on delete cascade,
+  -- Denormalized on purpose: there's no safe way for the invited person's client to look up
+  -- a stranger's email from owner_id alone (RLS on auth.users correctly won't allow that),
+  -- so the owner's own email is captured at invite time instead, for "X invited you" display.
+  owner_email text not null,
   member_id uuid references auth.users(id) on delete cascade,
   invited_email text not null,
   -- 'pending' until the invited person (signed in with a matching email) accepts it.
@@ -151,6 +155,9 @@ create table if not exists public.plan_members (
   created_at timestamptz not null default now(),
   unique (owner_id, invited_email)
 );
+
+-- Existing installs: add the column introduced after the initial release.
+alter table public.plan_members add column if not exists owner_email text not null default '';
 
 create index if not exists plan_members_owner_id_idx on public.plan_members (owner_id);
 create index if not exists plan_members_member_id_idx on public.plan_members (member_id);
@@ -260,6 +267,7 @@ drop policy if exists "plan_members_insert_if_subscribed" on public.plan_members
 create policy "plan_members_insert_if_subscribed" on public.plan_members
   for insert with check (
     auth.uid() = owner_id
+    and lower(owner_email) = lower(auth.jwt() ->> 'email')
     and exists (
       select 1 from public.subscriptions s
       where s.user_id = auth.uid() and s.status = 'active'
